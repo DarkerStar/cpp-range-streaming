@@ -57,7 +57,7 @@ std::copy(std::begin(r), std::end(r), std::make_ostream_joiner(out, ", "));
 
 This is good, and stream iterators in general are a powerful tool that should
 not be maligned or discarded. However, for the *vast* majority of uses, their
-advantages outweigh their clumsiness.
+advantages are outweighed by their clumsiness.
 
 Consider the following code lifted straight out of N4066 (edited slightly to
 make the namespace prefixes consistent):
@@ -83,8 +83,8 @@ reading or writing sequences to or from streams has a number of issues:
 2.  It is unclear. Distinguishing an input or output operation from other copy
     operations is hard. Hell, it's not even easy to tell input from output.
 3.  It is semantically misleading. It is unnatural - if not straight up wrong -
-    to think of input or output as "copying". No one calls operator<< or
-    operator>> "copy operators".
+    to think of input or output as "copying". No one calls `operator<<` or
+    `operator>>` "copy operators".
 4.  It doesn't look like any other input or output operations, making them hard
     to spot in code.
 5.  It requires including *both* the iterator library (for the stream iterators)
