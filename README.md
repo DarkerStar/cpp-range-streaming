@@ -182,59 +182,16 @@ In the table below:
 *    `rd` is a non-`const` rvalue of a type that has
      `operator<<` defined for `std::basic_ostream<CharT, Traits>`.
 
-|          Expression          | Expression |              Effects             |
-|                              |   result   |                                  |
-| :--------------------------- | :--------- | :------------------------------- |
-| `is >> stream_range(lr)`     | reference  | Each element in `lr` is          |
-|                              |  to `is`   | overwritten by a value read from |
-|                              |            | `is`.                            |
-|                              |            | Stops immediately when           |
-|                              |            | `bool(is)` is `false`.           |
-| ---------------------------- | ---------- | -------------------------------- |
-| `is >> stream_range(rr)`     | reference  | Each element in `rr` is          |
-|                              |  to `is`   | overwritten by a value read from |
-|                              |            | `is`.                            |
-|                              |            | Stops immediately when           |
-|                              |            | `bool(is)` is `false`.           |
-| ---------------------------- | ---------- | -------------------------------- |
-| `os << stream_range(cr)`     | reference  | Each element in `cr` is written  |
-|                              |  to `os`   | to `os`. `cr` is not copied.     |
-|                              |            | Stops immediately when           |
-|                              |            | `bool(os)` is `false`.           |
-| ---------------------------- | ---------- | -------------------------------- |
-| `os << stream_range(rr)`     | reference  | `rr` is moved and stored         |
-|                              |  to `os`   | internally, then each element is |
-|                              |            | written to `os`.                 |
-|                              |            | Stops immediately when           |
-|                              |            | `bool(os)` is `false`.           |
-| ---------------------------- | ---------- | -------------------------------- |
-| `os << stream_range(cr, cd)` | reference  | Each element in `cr` is written  |
-|                              |  to `os`   | to `os`, with `cd` written       |
-|                              |            | between each element.            |
-|                              |            | `cr` is not copied.              |
-|                              |            | Stops immediately when           |
-|                              |            | `bool(os)` is `false`.           |
-| ---------------------------- | ---------- | -------------------------------- |
-| `os << stream_range(cr, rd)` | reference  | Each element in `cr` is written  |
-|                              |  to `os`   | to `os`, with `rd` written       |
-|                              |            | between each element.            |
-|                              |            | `cr` is not copied.              |
-|                              |            | Stops immediately when           |
-|                              |            | `bool(os)` is `false`.           |
-| ---------------------------- | ---------- | -------------------------------- |
-| `os << stream_range(rr, cd)` | reference  | `rr` is moved and stored         |
-|                              |  to `os`   | internally, then each element is |
-|                              |            | written to `os`, with `cd`       |
-|                              |            | written between each element.    |
-|                              |            | Stops immediately when           |
-|                              |            | `bool(os)` is `false`.           |
-| ---------------------------- | ---------- | -------------------------------- |
-| `os << stream_range(rr, rd)` | reference  | `rr` is moved and stored         |
-|                              |  to `os`   | internally, then each element is |
-|                              |            | written to `os`, with `rd`       |
-|                              |            | written between each element.    |
-|                              |            | Stops immediately when           |
-|                              |            | `bool(os)` is `false`.           |
+| Expression                   | Expression result  | Effects                                                                                                                                                          |
+| :--------------------------- | :----------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `is >> stream_range(lr)`     | reference to `is`  | Each element in `lr` is overwritten by a value read from `is`. Stops immediately when `bool(is)` is `false`.                                                     |
+| `is >> stream_range(rr)`     | reference to `is`  | Each element in `rr` is overwritten by a value read from `is`. Stops immediately when `bool(is)` is `false`.                                                     |
+| `os << stream_range(cr)`     | reference to `os`  | Each element in `cr` is written  to `os`. `cr` is not copied. Stops immediately when `bool(os)` is `false`.                                                      |
+| `os << stream_range(rr)`     | reference to `os`  | `rr` is moved and stored internally, then each element is written to `os`. Stops immediately when `bool(os)` is `false`.                                         |
+| `os << stream_range(cr, cd)` | reference to `os`  | Each element in `cr` is written to `os`, with `cd` written between each element. `cr` is not copied. Stops immediately when `bool(os)` is `false`.               |
+| `os << stream_range(cr, rd)` | reference to `os`  | Each element in `cr` is written to `os`, with `rd` written between each element. `cr` is not copied. Stops immediately when `bool(os)` is `false`.               |
+| `os << stream_range(rr, cd)` | reference to `os`  | `rr` is moved and stored internally, then each element is written to `os`, with `cd` written between each element. Stops immediately when `bool(os)` is `false`. |
+| `os << stream_range(rr, rd)` | reference to `os`  | `rr` is moved and stored internally, then each element is written to `os`, with `rd` written between each element. Stops immediately when `bool(os)` is `false`. |
 
 This proposal focuses on ranges supplied as is, rather than the "traditional"
 C++ way: as a pair of iterators. The intention is that if you *do* wish to use
