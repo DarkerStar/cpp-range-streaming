@@ -265,6 +265,7 @@ early if the stream goes into a bad state:
 std::stream_range_back_insert(Range&&, Size)
 std::stream_range_front_insert(Range&&, Size)
 std::stream_range_insert(Range&&, Iterator, Size)
+```
 
 These functions would essentially be:
 
