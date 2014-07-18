@@ -1,0 +1,35 @@
+Installation Instructions
+*************************
+
+Library installation
+====================
+
+   The library does not require installation. It consists of a single
+C++ header file - stream_range. To use the library facilities, simply
+make sure that the header file can be find in the include search path
+(either by placing it with the system includes, or - better - using a
+compiler option to add it to the include search path).
+
+Testing
+=======
+
+   A minimal test suite for the range streaming facilities is provided.
+It is not a full or exhaustive test suite - it is merely intended to
+confirm proper behaviour in common situations.
+
+   The test suite requires Google Test <https://code.google.com/p/googletest/>.
+A minimal version of Google Test is included in the "test/gtest" folder,
+using fused files. (See <https://code.google.com/p/googletest/wiki/AdvancedGuide#Fusing_Google_Test_Source_Files>
+for more information.)
+
+   To build the test program, simply run "make" in the "test" folder.
+Running "make check" will build the test program (if necessary), then
+run it.
+
+   The test program requires C++11 (naturally), so it may be necessary
+to provide special command line parameters. The easiest way to do this
+is to run the following two commands:
+  CXXFLAGS='-std=c++11'
+  CXXFLAGS=$CXXFLAGS make check
+
+You can change the first command to use whatever options you wish.

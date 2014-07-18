@@ -1,0 +1,52 @@
+2014-07-18  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
+     
+     * COPYING: New project copyright documentaion.
+     Contains text of GPL3 from http://www.gnu.org/copyleft/gpl.html pages.
+     
+     * AUTHORS: New project contributor records.
+     
+     * THANKS: New project contributor records.
+     
+     * README: New package information and documentation file.
+     
+     * INSTALL: New installation documentation file.
+     
+     * ChangeLog: New project change log.
+     
+     * NEWS: New project history file.
+     
+     * include/stream_range: New header file.
+     (std::stream_range): New function template (two overloads).
+     (std::stream_iterator_range): New function template (two overloads).
+     (std::stream_range_detail::iterator_range): New class template.
+     (std::stream_range_detail::make_iterator_range): New function template.
+     (std::stream_range_detail::stream_range_proxy): New class template.
+     (std::stream_range_detail::stream_range_delimited_proxy): New class template.
+     
+     * test/Makefile: New test suite makefile.
+     
+     * test/main.cpp: New test suite source file.
+     (main): New function.
+     
+     * test/input.cpp: New test suite source file.
+     (Input, Range): New test.
+     (Input, Iterators): New test.
+     (Input, Discarding): New test.
+     
+     * test/output.cpp: New test suite source file.
+     (Output, LvalueRange): New test.
+     (Output, RvalueRange): New test.
+     (Output, Iterators): New test.
+     (DelimitedOutput, LvalueRange): New test.
+     (DelimitedOutput, RvalueRange): New test.
+     (DelimitedOutput, Iterators): New test.
+     (noncopyable_range): New class template.
+     (noncopyable_nonmoveable_range): New class template.
+     (noncopyable_delimiter): New class template.
+     (noncopyable_nonmoveable_delimiter): New class template.
+     (incrementing_integer_delimiter): New class.
+
+
+# Copyright 2014 Mark A. Gibbs
+# Copying and distribution of this file, with or without modification, are
+# permitted provided the copyright notice and this notice are preserved.

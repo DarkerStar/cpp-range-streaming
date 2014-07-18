@@ -1,0 +1,356 @@
+/* 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+// Proposed range streaming facilities.
+// Version: 1.0
+
+/* 
+ * This C++ header file implements a proposed extension to the C++ standard
+ * library that allows for easy and intuitive input and output of sequences,
+ * without requiring the use of the algorithms library.
+ * 
+ * Currently, to write the values in a range into an output stream, the
+ * recommended method is to use std::copy() and stream iterators, like so:
+ *   std::copy(std::begin(r), std::end(r), std::ostream_iterator<T>{out});
+ * 
+ * If one wants to include a delimiter between each item, this is currently the
+ * best option:
+ *   std::copy(std::begin(r), std::end(r), std::ostream_iterator<T>{out, ", "});
+ * 
+ * Unfortunately, that's not a great solution, because the "delimiter" is
+ * printed after every item - including the last. That's rarely what is desired.
+ * 
+ * There is a proposal (N3581, N4007, N4066) that would fix this problem:
+ *   std::copy(std::begin(r), std::end(r), std::make_ostream_joiner(out, ", "));
+ * 
+ * This paradigm is extremely useful, especially for complicated operations
+ * (like reading values from two input files, performing some kind of operation
+ * on each pair, and outputting the results to a third file). But it is not
+ * ideal:
+ *   1.  For the *vastly* most common cases, this construct is unnecessarily
+ *       complex and obscure.
+ *   2.  It's also semantically misleading, because input/output aren't really
+ *       "copy" operations (who calls operator<< a copy operator?).
+ *   3.  It requires including *both* the iterators library *and* the (quite
+ *       heavyweight) algorithms library, just for what should be a trivial
+ *       output operation.
+ *   4.  A C++ beginner is expected to not know the *right* way to print a
+ *       vector until after they've learned about algorithms and stream
+ *       iterators (and the latter is not at all a trivial thing to explain).
+ * 
+ * To put it bluntly, this shouldn't be that complex.
+ * 
+ * Adding insertion and extraction operators for the various container classes
+ * is, of course, not even on the table. But there is a way to get pretty close
+ * to it.
+ * 
+ * Consider the following code, which is actually from N4066 (modified to add
+ * the namespace prefixes consistently):
+ *   std::vector<int> v = {1, 4, 6};
+ *   std::cout << "(";
+ *   std::copy(v.begin(), v.end(), std::make_ostream_joiner(cout, ", "));
+ *   std::cout << ")"; // Prints (1, 4, 6) as desired
+ * 
+ * Now N4066 is a good proposal, and I don't want to give the impression that
+ * I'm maligning it. But for what's being done there... that code is just
+ * absurd. What this proposal offers is this:
+ *   std::vector<int> v = {1, 4, 6};
+ *   std::cout << "(" << std::stream_range(v, ", ") << ")";
+ * 
+ * Isn't that *much* clearer? You could also do this:
+ *   std::cout << "(" << std::stream_range({1, 4, 6}, ", ") << ")";
+ * 
+ * As with output stream iterators, the delimiter is optional.
+ * 
+ * Works for input, too (though, obviously, you can't use a delimiter with
+ * input):
+ *   auto v = std::vector<int>(5);
+ *   std::cin >> std::stream_range(v); // Reads 5 (v.size()) ints from cin
+ * 
+ * If you only have iterators you can either create a range with them (one that
+ * would be compatible with range-for), or you can use
+ * std::stream_iterator_range, which takes a pair of iterators rather than a
+ * range, but otherwise does the same as std::stream_range.
+ * 
+ * These facilities are less flexible than using stream iterators, but they are
+ * far more natural for the most common uses, and even have some advantages over
+ * the stream iterator solution. For example, if the output stream goes bad,
+ * std::stream_range will stop output immediately, while std::copy will continue
+ * to work its way through the input range until it's complete, no matter how
+ * much time that wastes.
+ * 
+ * The intention is for these facilities to eventually be included directly into
+ * the IOstreams library headers - there are no dependencies on any other part
+ * of the standard library (other than std::forward). In particular, it is not
+ * necessary to include either the algorithms library or the iterators library.
+ * 
+ * To use this library, simply make sure this file is in the include lookup
+ * path, and do:
+ *   #include <stream_range>
+ * 
+ * At least C++11 is required.
+ * 
+ * The range streaming library consists of 4 functions. They are:
+ *   std::stream_range(Range&&)
+ *   std::stream_range(Range&&, Delimiter&&)
+ *   std::stream_iterator_range(Iterator, Iterator)
+ *   std::stream_iterator_range(Iterator, Iterator, Delimiter&&)
+ * 
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * template <typename Range>
+ * std::stream_range(Range&& r) -> %unspecified%
+ * 
+ * Returns an object of unspecified type that can be used in one of two ways.
+ *   1.  If out is an object of type std::basic_ostream<CharT, Traits>, then
+ *       the expression "out << std::stream_range(r)" behaves as if:
+ *         for (auto const& i : r) { if (!(out << i)) break; }
+ *       and returns a reference to out.
+ *   2.  If in is an object of type std::basic_istream<CharT, Traits>, then
+ *       the expression "in >> std::stream_range(r)" behaves as if:
+ *         for (auto& i : r) { if (!(in >> i)) break; }
+ *       and returns a reference to in.
+ * 
+ * This function must not make any unnecessary copies of the range.
+ * 
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * template <typename Range, typename Delimiter>
+ * std::stream_range(Range&& r, Delimiter&& d) -> %unspecified%
+ * 
+ * Returns an object of unspecified type such that if out is an object of type
+ * std::basic_ostream<CharT, Traits>, then the expression
+ * "out << std::stream_range(r, d)" effectively calls "out << i" for each item
+ * i in the range r, and "out << d" after each of those calls except the last,
+ * aborting immediately if bool(out) is false. The expression returns a
+ * reference to out.
+ * 
+ * This function must not make any unnecessary copies of the range.
+ * 
+ * Note: While std::stream_range(Range&&) can be used for input and output
+ *       streams, std::stream_range(Range&&, Delimiter&&) only works for output
+ *       streams.
+ * 
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * template <typename Iterator>
+ * std::stream_iterator_range(Iterator b, Iterator e) -> %unspecified%
+ * 
+ * Effectively identical to std::stream_range(std::make_range(b, e)).
+ * 
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * template <typename Iterator, typename Delimiter>
+ * std::stream_iterator_range(Iterator b, Iterator e, Delimiter&& d) -> %unspecified%
+ * 
+ * Effectively identical to std::stream_range(std::make_range(b, e), d).
+ * 
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Possible future directions:
+ * 
+ * std::stream_range works for input - for a range with N elements, it will
+ * (attempt) to read N items from the input stream. That means you must know
+ * in advance how many items there are in the input source. Unfortunately, it
+ * also means that if there is a failure before all N elements are read, you
+ * don't know which elements in the range were successfully read.
+ * 
+ * For more practical input situations, the following additional range streaming
+ * functions might be handy:
+ *   std::stream_range_back_insert(Range&&)
+ *   std::stream_range_front_insert(Range&&)
+ *   std::stream_range_insert(Range&&, Iterator)
+ * 
+ * The basic std::stream_range(Range&&) as applied to input is essentially:
+ *   std::copy_n(std::istream_iterator<T>{in}, std::size(r), std::begin(r))
+ * except that it will stop immediately whenever bool(in) is false. By analogy,
+ * these other three functions, in turn, would be:
+ *   std::copy(std::istream_iterator<T>{in}, std::istream_iterator<T>{}, std::back_inserter(r))
+ *   std::copy(std::istream_iterator<T>{in}, std::istream_iterator<T>{}, std::front_inserter(r))
+ *   std::copy(std::istream_iterator<T>{in}, std::istream_iterator<T>{}, std::inserter(r, r.begin()))
+ * 
+ * Another handy extension might be to have these functions also take an
+ * optional size argument, allowing them to read up to that many items, stopping
+ * early if the stream goes into a bad state:
+ *   std::stream_range_back_insert(Range&&, Size)
+ *   std::stream_range_front_insert(Range&&, Size)
+ *   std::stream_range_insert(Range&&, Iterator, Size)
+ * 
+ * These functions would essentially be:
+ *   std::copy_n(std::istream_iterator<T>{in}, n, std::back_inserter(r))
+ *   std::copy_n(std::istream_iterator<T>{in}, n, std::front_inserter(r))
+ *   std::copy_n(std::istream_iterator<T>{in}, n, std::inserter(r, r.begin()))
+ * except they would stop early if the input stream goes into a bad state.
+ * 
+ * These functions may be added in a future version of this library, once some
+ * questions have been addressed.
+ */
+
+#ifndef STD_STREAM_RANGE_
+#define STD_STREAM_RANGE_
+
+#include <iosfwd>
+#include <utility>
+
+namespace std {
+
+/* 
+ * All of the monkeyworks necessary for range streaming is in this namespace.
+ */
+namespace stream_range_detail {
+
+/* 
+ * This is a VERY basic version of the proposed std::range<Iterator> and the
+ * associated std::make_range() function. But it does the job here, and using
+ * this simple helper class makes the range streaming stuff independent of the
+ * rest of the standard library.
+ */
+template <typename Iterator>
+struct iterator_range
+{
+  auto begin() const -> Iterator { return begin_; }
+  auto end()   const -> Iterator { return end_; }
+  
+  Iterator begin_;
+  Iterator end_;
+};
+
+template <typename Iterator>
+auto make_iterator_range(Iterator b, Iterator e) -> iterator_range<Iterator>
+{
+  return { b, e };
+}
+
+/* 
+ * This is the proxy object returned from the versions of the range streaming
+ * functions that don't use delimiters.
+ */
+template <typename Range>
+struct stream_range_proxy
+{
+  Range range;
+};
+
+/* 
+ * This is the proxy object returned from the versions of the range streaming
+ * functions that use delimiters. Note that the delimiter can be any type that
+ * has an insertion operator defined - not just strings.
+ */
+template <typename Range, typename Delim>
+struct stream_range_delimited_proxy
+{
+  Range range;
+  Delim delim;
+};
+
+/* 
+ * This is the extraction operator for range streaming.
+ */
+template <typename CharT, typename Traits, typename Range>
+auto operator>>(basic_istream<CharT, Traits>& in, stream_range_proxy<Range> p) ->
+  basic_istream<CharT, Traits>&
+{
+  if (!in)
+    return in;
+  
+  for (auto& i : p.range)
+  {
+    if (!(in >> i))
+      break;
+  }
+  
+  return in;
+}
+
+/* 
+ * This is the insertion operator for range streaming without a delimiter.
+ */
+template <typename CharT, typename Traits, typename Range>
+auto operator<<(basic_ostream<CharT, Traits>& out, stream_range_proxy<Range> const& p) ->
+  basic_ostream<CharT, Traits>&
+{
+  if (!out)
+    return out;
+  
+  for (auto const& i : p.range)
+  {
+    if (!(out << i))
+      break;
+  }
+  
+  return out;
+}
+
+/* 
+ * This is the insertion operator for range streaming with a delimiter.
+ * 
+ * Note that it is possible to simplify this somewhat with a slightly different
+ * algorithm. First you get the begin and end iterators from the range, and
+ * if (begin != end) { out << *begin++; }, then while (begin != end)
+ * { out << delim << *begin++; }, with all the requisite checking of the stream
+ * state, of course. I thought the version below would be clearer in its intent
+ * for the purpose of this demonstration.
+ */
+template <typename CharT, typename Traits, typename Range, typename Delim>
+auto operator<<(basic_ostream<CharT, Traits>& out, stream_range_delimited_proxy<Range, Delim> const& p) ->
+  basic_ostream<CharT, Traits>&
+{
+  if (!out)
+    return out;
+  
+  auto first = true;
+  
+  for (auto const& i : p.range)
+  {
+    if (!first && !(out << p.delim))
+      break;
+    
+    first = false;
+    
+    if (!(out << i))
+      break;
+  }
+  
+  return out;
+}
+
+} // stream_range_detail
+
+template <typename Range>
+auto stream_range(Range&& r) ->
+  stream_range_detail::stream_range_proxy<Range>
+{
+  return { forward<Range>(r) };
+}
+
+template <typename Range, typename Delim>
+auto stream_range(Range&& r, Delim&& d) ->
+  stream_range_detail::stream_range_delimited_proxy<Range, Delim>
+{
+  return { forward<Range>(r), forward<Delim>(d) };
+}
+
+template <typename Iterator>
+auto stream_iterator_range(Iterator b, Iterator e) ->
+  stream_range_detail::stream_range_proxy<stream_range_detail::iterator_range<Iterator>>
+{
+  return { stream_range_detail::make_iterator_range(b, e) };
+}
+
+template <typename OutputIterator, typename Delim>
+auto stream_iterator_range(OutputIterator b, OutputIterator e, Delim&& d) ->
+  stream_range_detail::stream_range_delimited_proxy<stream_range_detail::iterator_range<OutputIterator>, Delim>
+{
+  return { stream_range_detail::make_iterator_range(b, e), forward<Delim>(d) };
+}
+
+} // namespace std
+
+#endif // STD_STREAM_RANGE_

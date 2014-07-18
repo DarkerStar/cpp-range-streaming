@@ -1,0 +1,18 @@
+# C++ range streaming proposal AUTHORS file
+# 
+# Copyright 2014 Mark A. Gibbs <indi.in.the.wired@gmail.com>
+# 
+# Copying and distribution of this file, with or without modification, are
+# permitted in any medium without royalty provided the copyright notice and this
+# notice are preserved. This file is offered as-is, without any warranty.
+# 
+# Also see the ChangeLog and THANKS files.
+
+
+
+Mark A. Gibbs                                      <indi.in.the.wired@gmail.com>
+--------------------------------------------------------------------------------
+
+  created      -> AUTHORS, ChangeLog, COPYING, INSTALL, NEWS, README, THANKS,
+                  include/stream_range, test/Makefile, test/main.cpp,
+                  test/input.cpp, test/output.cpp, .gitignore
