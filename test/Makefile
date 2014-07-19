@@ -11,41 +11,51 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# The test objects - this is the only part that should change from time to time.
+test_obj := input.o \
+            output.o
+
+# The header being tested.
+test_inc := ../include/stream_range
+
+# Need to get the include paths right, and might as well turning threading off
+# for Google Test.
 CPPFLAGS += -I../include -I. -DGTEST_HAS_PTHREAD=0
+
+# Google test stuff.
+gtest_inc := gtest/gtest.h
+gtest_obj := gtest/gtest-all.o
 
 # Restrict the suffixes to the ones used
 .SUFFIXES:
-.SUFFIXES: .cpp .h .hpp .o
+.SUFFIXES: .cpp .cc .hpp .h .o
 
+# Default target just makes the test program.
 all : stream_range_test
 
 .PHONY : all
 
-stream_range_test : main.o output.o input.o gtest-all.o
+# Pretty standard build command.
+stream_range_test : main.o $(test_obj) $(gtest_obj)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
-TEST_HEADERS := ../include/stream_range
-GTEST_HEADER := gtest/gtest.h
+# Dependencies. No need to muck around with automatic dependencies.
+main.o : main.cpp $(gtest_inc)
 
-main.o : main.cpp $(GTEST_HEADER)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c main.cpp
+$(gtest_obj): $(gtest_inc)
 
-input.o : input.cpp $(TEST_HEADERS) $(GTEST_HEADER)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c input.cpp
+$(test_obj) : $(test_inc) $(gtest_inc)
 
-output.o : output.cpp $(TEST_HEADERS) $(GTEST_HEADER)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c output.cpp
-
-gtest-all.o : gtest/gtest-all.cc $(GTEST_HEADER)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c gtest/gtest-all.cc
-
+# check target builds the test program then runs it.
 check : stream_range_test
 	./stream_range_test
 
 .PHONY : check
 
+# Standard clean target.
 clean :
 	-@rm -f *.o
+	-@rm -f gtest/*.o
 	-@rm -f stream_range_test
 
 .PHONY : clean
