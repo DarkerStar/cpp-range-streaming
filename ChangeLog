@@ -1,3 +1,17 @@
+2014-07-20  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
+     
+     * INSTALL: Reworded text about CXXFLAGS and added section for Boost testing.
+     
+     * test/Makefile: Completely rewrote test suite makefile; now checks for
+       HAVE_BOOST option.
+     
+     * test/boost.cpp: New test suite source file.
+     (Boost, AdaptedOutput): New test.
+     (is_even): New function object.
+     (is_odd): New function object.
+
+
+
 2014-07-18  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
      
      * COPYING: New project copyright documentaion.

@@ -27,9 +27,21 @@ Running "make check" will build the test program (if necessary), then
 run it.
 
    The test program requires C++11 (naturally), so it may be necessary
-to provide special command line parameters. The easiest way to do this
-is to run the following two commands:
-  CXXFLAGS='-std=c++11'
-  CXXFLAGS=$CXXFLAGS make check
+to provide special command line options. The easiest way to do this is
+to add the required options the environment variable CXXFLAGS:
+  export CXXFLAGS="$CXXFLAGS -std=c++11"
+You can add whatever other options you wish, of course.
 
-You can change the first command to use whatever options you wish.
+Once you've done that, "make check" just does the right thing:
+  make check
+
+
+### Testing with Boost ###
+
+   If you have Boost, you can do some extra tests that use Boost.Range.
+By default, these tests are not included. If you want to add them, you
+must define a variable called HAVE_BOOST. For example:
+  make check HAVE_BOOST=1
+
+(Of course, you can also export an environment variable called
+HAVE_BOOST - as shown with CXXFLAGS above - if you wish.)

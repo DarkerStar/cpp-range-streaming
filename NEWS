@@ -1,3 +1,9 @@
+Version 1.1.0 ----------------------------------------------------- [2014-07-20]
+
+*   Optional test with Boost.Range adaptors added - define HAVE_BOOST while
+    making the test suite to activate Boost testing.
+
+
 Version 1.0 ------------------------------------------------------- [2014-07-18]
 
 *   Example implementation of proposed C++ range streaming library.

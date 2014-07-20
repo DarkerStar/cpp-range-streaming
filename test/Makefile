@@ -22,6 +22,11 @@ test_inc := ../include/stream_range
 # for Google Test.
 CPPFLAGS += -I../include -I. -DGTEST_HAS_PTHREAD=0
 
+# Include Boost test only if requested.
+ifdef HAVE_BOOST
+test_obj += boost.o
+endif
+
 # Google test stuff.
 gtest_inc := gtest/gtest.h
 gtest_obj := gtest/gtest-all.o
@@ -37,7 +42,7 @@ all : stream_range_test
 
 # Pretty standard build command.
 stream_range_test : main.o $(test_obj) $(gtest_obj)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS) -o $@
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 # Dependencies. No need to muck around with automatic dependencies.
 main.o : main.cpp $(gtest_inc)
