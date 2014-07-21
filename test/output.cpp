@@ -257,6 +257,45 @@ TEST(Output, Iterators)
   }
 }
 
+/* Test: Preservation of formatting from element to element.
+ * 
+ * Whatever the formatting state at the beginning of the output of a streamed
+ * range, it should be applied to every element in the range.
+ */
+TEST(Output, Formatting)
+{
+  {
+    auto const r = std::array<int, 5>{ 0x0287, 0x071A, 0x00E6, 0x001A, 0x029E };
+    
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss.width(8);
+    oss.fill('.');
+    oss.setf(std::ios_base::hex, std::ios_base::basefield);
+    oss.setf(std::ios_base::left, std::ios_base::adjustfield);
+    oss.setf(std::ios_base::uppercase);
+    oss.setf(std::ios_base::showbase);
+    
+    EXPECT_TRUE(oss << std::stream_range(r));
+    EXPECT_EQ(oss.str(), "0X287..." "0X71A..." "0XE6...." "0X1A...." "0X29E...");
+  }
+  
+  {
+    auto const r = std::array<double, 5>{ 1.0, -2.3, 6.66666, -0.12345, 1.2345 };
+    
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss.width(8);
+    oss.precision(3);
+    oss.fill('_');
+    oss.setf(std::ios_base::internal, std::ios_base::adjustfield);
+    oss.setf(std::ios_base::showpoint);
+    
+    EXPECT_TRUE(oss << std::stream_range(r));
+    EXPECT_EQ(oss.str(), "____1.00" "-___2.30" "____6.67" "-__0.123" "-___1.23");
+  }
+}
+
 /* Test: Output of a range with a delimiter, when the range is given as an
  *       lvalue.
  * 
@@ -369,5 +408,49 @@ TEST(DelimitedOutput, Iterators)
     
     EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end(), incrementing_integer_delimiter{}));
     EXPECT_EQ(oss.str(), "a0b1c2d");
+  }
+}
+
+/* Test: Preservation of formatting from element to element, with a delimiter.
+ * 
+ * Whatever the formatting state at the beginning of the output of a streamed
+ * range, it should be applied to every element in the range. But the whatever
+ * formatting state is after outputting an element, *that* state should be used
+ * for the delimiter. So if s1 is the original state of the formatting flags
+ * before any output, and s2 is the state after inserting an element of the
+ * range's value_type, then the output should look like:
+ *   <s1> element 1 <s2> delimiter <s1> element 2 <s2> delimiter <s1> element 3
+ */
+TEST(DelimitedOutput, Formatting)
+{
+  {
+    auto const r = std::array<int, 5>{ 0x0287, 0x071A, 0x00E6, 0x001A, 0x029E };
+    
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss.width(8);
+    oss.fill('.');
+    oss.setf(std::ios_base::hex, std::ios_base::basefield);
+    oss.setf(std::ios_base::left, std::ios_base::adjustfield);
+    oss.setf(std::ios_base::uppercase);
+    oss.setf(std::ios_base::showbase);
+    
+    EXPECT_TRUE(oss << std::stream_range(r, 23));
+    EXPECT_EQ(oss.str(), "0X287...0X17" "0X71A...0X17" "0XE6....0X17" "0X1A....0X17" "0X29E...0X17");
+  }
+  
+  {
+    auto const r = std::array<double, 5>{ 1.0, -2.3, 6.66666, -0.12345, 1.2345 };
+    
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss.width(8);
+    oss.precision(3);
+    oss.fill('_');
+    oss.setf(std::ios_base::internal, std::ios_base::adjustfield);
+    oss.setf(std::ios_base::showpoint);
+    
+    EXPECT_TRUE(oss << std::stream_range(r, -1.23456));
+    EXPECT_EQ(oss.str(), "____1.00-1.23" "-___2.30-1.23" "____6.67-1.23" "-__0.123-1.23" "-___1.23-1.23");
   }
 }
