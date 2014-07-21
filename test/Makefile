@@ -13,7 +13,8 @@
 
 # The test objects - this is the only part that should change from time to time.
 test_obj := input.o \
-            output.o
+            output.o \
+            iterators.o
 
 # The header being tested.
 test_inc := ../include/stream_range

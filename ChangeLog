@@ -7,12 +7,24 @@
      (std::operator<< with std::stream_range_detail::stream_range_delimited_proxy):
         Added formatting save/restore.
      
+     * test/Makefile: Added iterators.cpp test.
+     
+     * test/input.cpp:
+     (Input, Iterators): Test moved to iterators.cpp.
+     
      * test/output.cpp: Fixed minor problems in formatting tests.
      (Output, Formatting): Added missing negative sign from last double test
                            value.
      (DelimitedOutput, Formatting): Added missing negative sign from last
                                     double test value.
                                     Removed delimiters from ends of expected.
+     (Output, Iterators): Test moved to iterators.cpp.
+     (DelimitedOutput, Iterators): Test moved to iterators.cpp.
+     
+     * test/iterators.cpp: New test suite source file.
+     (Iterators, Input): Test moved from input.cpp.
+     (Iterators, Output): Test moved from input.cpp.
+     (Iterators, DelimitedOutput): Test moved from output.cpp.
 
 
 

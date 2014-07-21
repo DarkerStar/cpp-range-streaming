@@ -58,34 +58,6 @@ TEST(Input, Range)
   EXPECT_EQ(d, 6.6);
 }
 
-/* Test: Input into a range defined by a pair of iterators.
- * 
- * The "basic" use of std::stream_iterator_range() with input streams, replaces
- * each element in the range by reading a new value from the input stream.
- * Should leave the stream in the same state it would be in if the values were
- * read by a manual loop.
- */
-TEST(Input, Iterators)
-{
-  // Note: source data has 6 doubles, expected has 5. That means when the
-  // source data is read, there should be one more double left. This will
-  // be checked.
-  auto const src = std::string{"1.1 2.2 3.3 4.4 5.5 6.6"};
-  auto const expected = std::array<double, 5>{ 1.1, 2.2, 3.3, 4.4, 5.5 };
-  
-  auto a = std::array<double, 5>{};
-  auto d = 0.0;
-  
-  std::istringstream iss{src};
-  iss.imbue(std::locale::classic());
-  
-  EXPECT_TRUE(iss >> std::stream_iterator_range(a.begin(), a.end()));
-  EXPECT_TRUE(std::equal(a.begin(), a.end(), expected.begin()));
-  
-  EXPECT_TRUE(iss >> d);
-  EXPECT_EQ(d, 6.6);
-}
-
 /* Test: Input into an rvalue range.
  * 
  * This is a handy use of std::stream_range() with input streams, where the

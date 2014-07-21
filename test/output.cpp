@@ -24,10 +24,11 @@
 #include <algorithm>
 #include <array>
 #include <forward_list>
-#include <iterator>
+#include <initializer_list>
 #include <locale>
 #include <sstream>
 #include <string>
+#include <utility>
 
 #include <stream_range>
 
@@ -224,39 +225,6 @@ TEST(Output, RvalueRange)
   }
 }
 
-/* Test: Output of a range given by an iterator pair.
- * 
- * std::stream_iterator_range(b, e) is just
- * std::stream_range(make_range(b, e)), where make_range() is a function
- * that creates a simple object with begin() and end() functions that just
- * return b and e respectively.
- */
-TEST(Output, Iterators)
-{
-  {
-    auto const r = std::array<char, 4>{ 'a', 'b', 'c', 'd' };
-    
-    std::ostringstream oss;
-    oss.imbue(std::locale::classic());
-    
-    EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end()));
-    EXPECT_EQ(oss.str(), "abcd");
-  }
-  
-  {
-    auto const src = std::string{"32 48 59 61"};
-    
-    std::istringstream in{src};
-    
-    std::ostringstream oss;
-    oss.imbue(std::locale::classic());
-    
-    EXPECT_TRUE(oss << std::stream_iterator_range(
-      std::istream_iterator<int>{in}, std::istream_iterator<int>{}));
-    EXPECT_EQ(oss.str(), "32485961");
-  }
-}
-
 /* Test: Preservation of formatting from element to element.
  * 
  * Whatever the formatting state at the beginning of the output of a streamed
@@ -369,45 +337,6 @@ TEST(DelimitedOutput, RvalueRange)
     
     EXPECT_TRUE(oss << std::stream_range(noncopyable_range<int, 4>{ 2, 4, 6, 8 }, incrementing_integer_delimiter{}));
     EXPECT_EQ(oss.str(), "2041628");
-  }
-}
-
-/* Test: Output of a range given by an iterator pair with a delimiter.
- * 
- * std::stream_iterator_range(b, e, d) is just
- * std::stream_range(make_range(b, e), d), where make_range() is a function
- * that creates a simple object with begin() and end() functions that just
- * return b and e respectively.
- */
-TEST(DelimitedOutput, Iterators)
-{
-  auto const r = std::array<char, 4>{ 'a', 'b', 'c', 'd' };
-  
-  // Lvalue delimiter.
-  {
-    noncopyable_nonmoveable_delimiter d{"***"};
-    
-    std::ostringstream oss;
-    
-    EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end(), d));
-    EXPECT_EQ(oss.str(), "a***b***c***d");
-  }
-  
-  // Rvalue delimiter.
-  {
-    std::ostringstream oss;
-    
-    EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end(), noncopyable_delimiter{"++"}));
-    EXPECT_EQ(oss.str(), "a++b++c++d");
-  }
-  
-  // "Special" delimiter.
-  {
-    std::ostringstream oss;
-    oss.imbue(std::locale::classic());
-    
-    EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end(), incrementing_integer_delimiter{}));
-    EXPECT_EQ(oss.str(), "a0b1c2d");
   }
 }
 
