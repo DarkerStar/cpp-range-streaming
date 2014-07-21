@@ -281,7 +281,7 @@ TEST(Output, Formatting)
   }
   
   {
-    auto const r = std::array<double, 5>{ 1.0, -2.3, 6.66666, -0.12345, 1.2345 };
+    auto const r = std::array<double, 5>{ 1.0, -2.3, 6.66666, -0.12345, -1.2345 };
     
     std::ostringstream oss;
     oss.imbue(std::locale::classic());
@@ -436,11 +436,11 @@ TEST(DelimitedOutput, Formatting)
     oss.setf(std::ios_base::showbase);
     
     EXPECT_TRUE(oss << std::stream_range(r, 23));
-    EXPECT_EQ(oss.str(), "0X287...0X17" "0X71A...0X17" "0XE6....0X17" "0X1A....0X17" "0X29E...0X17");
+    EXPECT_EQ(oss.str(), "0X287...0X17" "0X71A...0X17" "0XE6....0X17" "0X1A....0X17" "0X29E...");
   }
   
   {
-    auto const r = std::array<double, 5>{ 1.0, -2.3, 6.66666, -0.12345, 1.2345 };
+    auto const r = std::array<double, 5>{ 1.0, -2.3, 6.66666, -0.12345, -1.2345 };
     
     std::ostringstream oss;
     oss.imbue(std::locale::classic());
@@ -451,6 +451,6 @@ TEST(DelimitedOutput, Formatting)
     oss.setf(std::ios_base::showpoint);
     
     EXPECT_TRUE(oss << std::stream_range(r, -1.23456));
-    EXPECT_EQ(oss.str(), "____1.00-1.23" "-___2.30-1.23" "____6.67-1.23" "-__0.123-1.23" "-___1.23-1.23");
+    EXPECT_EQ(oss.str(), "____1.00-1.23" "-___2.30-1.23" "____6.67-1.23" "-__0.123-1.23" "-___1.23");
   }
 }

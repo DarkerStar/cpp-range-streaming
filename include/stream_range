@@ -14,7 +14,7 @@
  */
 
 // Proposed range streaming facilities.
-// Version: 1.0
+// Version: 1.1.0
 
 /* 
  * This C++ header file implements a proposed extension to the C++ standard
@@ -191,6 +191,10 @@
  * 
  * These functions may be added in a future version of this library, once some
  * questions have been addressed.
+ * 
+ * Version 1.1.0:
+ *   * Added support for preserving formatting from element to element in
+ *     output.
  */
 
 #ifndef STD_STREAM_RANGE_
@@ -227,6 +231,37 @@ auto make_iterator_range(Iterator b, Iterator e) -> iterator_range<Iterator>
 {
   return { b, e };
 }
+
+/* 
+ * This class stores the formatting state of an ostream object on construction,
+ * and can restore that state at any time. It is used to keep consistent
+ * formatting for each item.
+ */
+template <typename CharT, typename Traits>
+struct stream_formatting_saver
+{
+  explicit stream_formatting_saver(std::basic_ios<CharT, Traits>& s) :
+    stream_{s},
+    flags_{s.flags()},
+    width_{s.width()},
+    precision_{s.precision()},
+    fill_{s.fill()}
+  {}
+  
+  void restore() const
+  {
+    stream_.flags(flags_);
+    stream_.fill(fill_);
+    stream_.precision(precision_);
+    stream_.width(width_);
+  }
+  
+  std::basic_ios<CharT, Traits>& stream_;
+  typename std::basic_ios<CharT, Traits>::fmtflags const flags_;
+  std::streamsize const width_;
+  std::streamsize const precision_;
+  CharT const fill_;
+};
 
 /* 
  * This is the proxy object returned from the versions of the range streaming
@@ -279,8 +314,12 @@ auto operator<<(basic_ostream<CharT, Traits>& out, stream_range_proxy<Range> con
   if (!out)
     return out;
   
+  auto const formatting = stream_formatting_saver<CharT, Traits>{out};
+  
   for (auto const& i : p.range)
   {
+    formatting.restore();
+    
     if (!(out << i))
       break;
   }
@@ -305,6 +344,8 @@ auto operator<<(basic_ostream<CharT, Traits>& out, stream_range_delimited_proxy<
   if (!out)
     return out;
   
+  auto const formatting = stream_formatting_saver<CharT, Traits>{out};
+  
   auto first = true;
   
   for (auto const& i : p.range)
@@ -313,6 +354,8 @@ auto operator<<(basic_ostream<CharT, Traits>& out, stream_range_delimited_proxy<
       break;
     
     first = false;
+    
+    formatting.restore();
     
     if (!(out << i))
       break;

@@ -1,3 +1,21 @@
+2014-07-22  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
+     
+     * include/stream_range: Added formatting support for output
+     (std::stream_range_detail::stream_formatting_saver): New class template.
+     (std::operator<< with std::stream_range_detail::stream_range_proxy):
+        Added formatting save/restore
+     (std::operator<< with std::stream_range_detail::stream_range_delimited_proxy):
+        Added formatting save/restore.
+     
+     * test/output.cpp: Fixed minor problems in formatting tests.
+     (Output, Formatting): Added missing negative sign from last double test
+                           value.
+     (DelimitedOutput, Formatting): Added missing negative sign from last
+                                    double test value.
+                                    Removed delimiters from ends of expected.
+
+
+
 2014-07-21  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
      
      * test/output.cpp: Added tests for formatted output (that currently fail).
