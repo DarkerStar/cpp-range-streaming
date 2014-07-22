@@ -14,7 +14,7 @@
  */
 
 // Proposed range streaming facilities.
-// Version: 1.1.0
+// Version: 1.2.0
 
 /* 
  * This C++ header file implements a proposed extension to the C++ standard
@@ -191,6 +191,10 @@
  * 
  * These functions may be added in a future version of this library, once some
  * questions have been addressed.
+ * 
+ * Version 1.2.0:
+ *   * Added support for preserving formatting from element to element in
+ *     input.
  * 
  * Version 1.1.0:
  *   * Added support for preserving formatting from element to element in
