@@ -295,8 +295,12 @@ auto operator>>(basic_istream<CharT, Traits>& in, stream_range_proxy<Range> p) -
   if (!in)
     return in;
   
+  auto const formatting = stream_formatting_saver<CharT, Traits>{in};
+  
   for (auto& i : p.range)
   {
+    formatting.restore();
+    
     if (!(in >> i))
       break;
   }
