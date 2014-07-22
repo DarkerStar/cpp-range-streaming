@@ -1,5 +1,12 @@
 2014-07-22  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
      
+     * test/input.cpp: Added test for formatted input (that currently fails).
+     (Input, Formatting): New test.
+
+
+
+2014-07-21  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
+     
      * include/stream_range: Added formatting support for output
      (std::stream_range_detail::stream_formatting_saver): New class template.
      (std::operator<< with std::stream_range_detail::stream_range_proxy):

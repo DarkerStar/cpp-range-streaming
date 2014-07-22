@@ -85,3 +85,39 @@ TEST(Input, Discarding)
   EXPECT_TRUE(iss >> d);
   EXPECT_EQ(d, 6);
 }
+
+/* Test: Preservation of formatting from element to element.
+ * 
+ * Whatever the formatting state at the beginning of the input of a streamed
+ * range, it should be applied to every element in the range.
+ */
+TEST(Input, Formatting)
+{
+  {
+    auto r = std::array<std::string, 3>{ "xx", "yy", "zz" };
+    
+    std::istringstream iss{"abcdefg"};
+    iss.width(2);
+    
+    EXPECT_TRUE(iss >> std::stream_range(r));
+    EXPECT_EQ(r[0], "ab");
+    EXPECT_EQ(r[1], "cd");
+    EXPECT_EQ(r[2], "ef");
+    
+    auto c = 'a';
+    EXPECT_TRUE(iss >> c);
+    EXPECT_EQ(c, 'g');
+  }
+  {
+    auto r = std::array<int, 3>{};
+    
+    std::istringstream iss{"10 0x10 010"};
+    iss.imbue(std::locale::classic());
+    iss.setf(std::ios_base::hex, std::ios_base::basefield);
+    
+    EXPECT_TRUE(iss >> std::stream_range(r));
+    EXPECT_EQ(r[0], 0x10);
+    EXPECT_EQ(r[1], 0x10);
+    EXPECT_EQ(r[2], 0x10);
+  }
+}
