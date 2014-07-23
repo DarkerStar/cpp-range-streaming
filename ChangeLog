@@ -1,3 +1,29 @@
+2014-07-23  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
+     
+     * include/stream_range: Added back_insert() and front_insert().
+     (std::back_insert): New function template (two overloads).
+     (std::range_back_inserter): New class template.
+     (std::operator>> with std::range_back_inserter&): New insert operator.
+     (std::operator>> with std::range_back_inserter&&): New insert operator.
+     (std::front_insert): New function template (two overloads).
+     (std::range_front_inserter): New class template.
+     (std::operator>> with std::range_front_inserter&): New insert operator.
+     (std::operator>> with std::range_front_inserter&&): New insert operator.
+     
+     * test/Makefile: Added back_insert.cpp and front_insert.cpp tests.
+     
+     * test/back_insert.cpp: New test suite source file.
+     (BackInsert, Types): New test.
+     (BackInsert, Input): New test.
+     (BackInsert, ErrorChecking): New test.
+     
+     * test/front_insert.cpp: New test suite source file.
+     (FrontInsert, Types): New test.
+     (FrontInsert, Input): New test.
+     (FrontInsert, ErrorChecking): New test.
+
+
+
 2014-07-22  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
      
      * include/stream_range: Added formatting support for input.
