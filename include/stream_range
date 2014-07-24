@@ -44,20 +44,33 @@
 
 namespace std {
 
+/* 
+ * All of the monkeyworks necessary for range streaming is in this namespace.
+ */
+namespace stream_range_detail {
+
+template <typename Range>
+using RangeIterator = decltype(begin(declval<Range>()));
+
+template <typename Range>
+using RangeValueType = typename iterator_traits<RangeIterator<Range>>::value_type;
+
+} // namespace stream_range_detail
+
 /*# Forward declarations for back_insert() ###################################*/
 
 template <typename Range>
 class range_back_inserter;
 
 template <typename Range>
-auto back_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+auto back_insert(Range& r, stream_range_detail::RangeValueType<Range> t) ->
   range_back_inserter<Range>;
 
 template <typename Range>
 auto back_insert(Range& r) -> range_back_inserter<Range>;
 
 template <typename Range>
-auto back_insert_n(Range& r, size_t n, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+auto back_insert_n(Range& r, size_t n, stream_range_detail::RangeValueType<Range> t) ->
   range_back_inserter<Range>;
 
 template <typename Range>
@@ -69,14 +82,14 @@ template <typename Range>
 class range_front_inserter;
 
 template <typename Range>
-auto front_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+auto front_insert(Range& r, stream_range_detail::RangeValueType<Range> t) ->
   range_front_inserter<Range>;
 
 template <typename Range>
 auto front_insert(Range& r) -> range_front_inserter<Range>;
 
 template <typename Range>
-auto front_insert_n(Range& r, size_t n, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+auto front_insert_n(Range& r, size_t n, stream_range_detail::RangeValueType<Range> t) ->
   range_front_inserter<Range>;
 
 template <typename Range>
@@ -404,7 +417,7 @@ auto operator>>(basic_istream<CharT, Traits>& in, range_back_inserter<Range>&& r
  * instance of the range's value type.
  */
 template <typename Range>
-auto back_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+auto back_insert(Range& r, stream_range_detail::RangeValueType<Range> t) ->
   range_back_inserter<Range>
 {
   return {r, size_t{0} - 1, move(t)};
@@ -413,7 +426,7 @@ auto back_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value_
 template <typename Range>
 auto back_insert(Range& r) -> range_back_inserter<Range>
 {
-  return back_insert(r, typename iterator_traits<decltype(r.begin())>::value_type{});
+  return back_insert(r, stream_range_detail::RangeValueType<Range>{});
 }
 
 /* 
@@ -429,7 +442,7 @@ auto back_insert(Range& r) -> range_back_inserter<Range>
  * instance of the range's value type.
  */
 template <typename Range>
-auto back_insert_n(Range& r, size_t n, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+auto back_insert_n(Range& r, size_t n, stream_range_detail::RangeValueType<Range> t) ->
   range_back_inserter<Range>
 {
   return {r, n, move(t)};
@@ -438,7 +451,7 @@ auto back_insert_n(Range& r, size_t n, typename iterator_traits<decltype(r.begin
 template <typename Range>
 auto back_insert_n(Range& r, size_t n) -> range_back_inserter<Range>
 {
-  return back_insert_n(r, n, typename iterator_traits<decltype(r.begin())>::value_type{});
+  return back_insert_n(r, n, stream_range_detail::RangeValueType<Range>{});
 }
 
 /*# Implementations for front_insert() ########################################*/
@@ -570,7 +583,7 @@ auto operator>>(basic_istream<CharT, Traits>& in, range_front_inserter<Range>&& 
  * instance of the range's value type.
  */
 template <typename Range>
-auto front_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+auto front_insert(Range& r, stream_range_detail::RangeValueType<Range> t) ->
   range_front_inserter<Range>
 {
   return {r, size_t{0} - 1, move(t)};
@@ -579,7 +592,7 @@ auto front_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value
 template <typename Range>
 auto front_insert(Range& r) -> range_front_inserter<Range>
 {
-  return front_insert(r, typename iterator_traits<decltype(r.begin())>::value_type{});
+  return front_insert(r, stream_range_detail::RangeValueType<Range>{});
 }
 
 /* 
@@ -595,7 +608,7 @@ auto front_insert(Range& r) -> range_front_inserter<Range>
  * instance of the range's value type.
  */
 template <typename Range>
-auto front_insert_n(Range& r, size_t n, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+auto front_insert_n(Range& r, size_t n, stream_range_detail::RangeValueType<Range> t) ->
   range_front_inserter<Range>
 {
   return {r, n, move(t)};
@@ -604,7 +617,7 @@ auto front_insert_n(Range& r, size_t n, typename iterator_traits<decltype(r.begi
 template <typename Range>
 auto front_insert_n(Range& r, size_t n) -> range_front_inserter<Range>
 {
-  return front_insert_n(r, n, typename iterator_traits<decltype(r.begin())>::value_type{});
+  return front_insert_n(r, n, stream_range_detail::RangeValueType<Range>{});
 }
 
 } // namespace std
