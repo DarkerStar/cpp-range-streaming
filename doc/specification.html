@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+	<meta charset="utf-8"/>
+	
+	<title>Specification</title>
+	
+	<link rel="stylesheet" href="style/specification.css"/>
+	<link rel="stylesheet" href="style/code.css"/>
+</head>
+<body>
+<main>
+
+<section id="contents">
+<h1>Contents</h1>
+
+<ol class="toc">
+  <li><a href="#general">General</a></li>
+  <li><a href="#requirements">Requirements</a>
+    <ol>
+      <li><a href="#requirements-input">Input requirements</a></li>
+      <li><a href="#requirements-output">Output requirements</a></li>
+    </ol>
+  </li>
+  <li><a href="#input">Input operations</a>
+    <ol>
+      <li><a href="#back_insert-intro">Class template <code class="lang-cpp">range_back_inserter</code></a></li>
+      <li><a href="#back_insert-operations"><code class="lang-cpp">range_back_inserter</code> operations</a>
+        <ol>
+          <li><a href="#back_insert-queries"><code class="lang-cpp">range_back_inserter</code> queries</a></li>
+          <li><a href="#back_insert-extractors"><code class="lang-cpp">range_back_inserter</code> extractors</a></li>
+          <li><a href="#back_insert-function"><code class="lang-cpp">back_insert</code></a></li>
+        </ol>
+      </li>
+      <li><a href="#front_insert-intro">Class template <code class="lang-cpp">range_front_inserter</code></a></li>
+      <li><a href="#front_insert-operations"><code class="lang-cpp">range_front_inserter</code> operations</a>
+        <ol>
+          <li><a href="#front_insert-queries"><code class="lang-cpp">range_front_inserter</code> queries</a></li>
+          <li><a href="#front_insert-extractors"><code class="lang-cpp">range_front_inserter</code> extractors</a></li>
+          <li><a href="#front_insert-function"><code class="lang-cpp">front_insert</code></a></li>
+        </ol>
+      </li>
+    </ol>
+  </li>
+  <li><a href="#output">Output operations</a></li>
+</ol>
+</section>
+<section id="general">
+<h1>General</h1>
+
+<p>
+  This specification defines several functions and associated types that support the use of ranges with IOStreams.
+</p>
+
+<div id="synopsis" class="synopsis">
+<p>
+  Header <code class="header file">&lt;stream_range&gt;</code> synopsis
+  
+<pre><code class="lang-cpp"><span class="pp">#include &lt;iosfwd&gt;</span>
+
+<span class="keyword">namespace</span> std <span class="delim">{</span>
+  <span class="comment">// Basic range I/O</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> Delimiter<span class="delim">&gt;</span>
+    <i>unspecified</i> stream_range<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">,</span> Delimiter<span class="delim">&amp;&amp;</span> delimiter<span class="delim">);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    <i>unspecified</i> stream_range<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">);</span>
+  
+  <span class="comment">// Back inserting input operation</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span> <span class="keyword">class</span> range_back_inserter<span class="delim">;</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;&amp;);</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> back_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> back_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">);</span>
+  
+  <span class="tbd">
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> back_insert_n<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> size_t count<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> back_insert_n<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> size_t count<span class="delim">);</span>
+  </span>
+  
+  <span class="comment">// Front inserting input operation</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span> <span class="keyword">class</span> range_front_inserter<span class="delim">;</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;&amp;);</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> front_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> front_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">);</span>
+  
+  <span class="tbd">
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> front_insert_n<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> size_t count<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> front_insert_n<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> size_t count<span class="delim">);</span>
+  </span>
+  
+  <span class="tbd">
+  <span class="comment">// Generalized inserting input</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span> <span class="keyword">class</span> range_inserter<span class="delim">;</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;&amp;);</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeIteratorType</i> pos<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeIteratorType</i> pos<span class="delim">);</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> insert_n<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeIteratorType</i> pos<span class="delim">,</span> size_t count<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> insert_n<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeIteratorType</i> pos<span class="delim">,</span> size_t count<span class="delim">);</span>
+  </span>
+<span class="delim">}</span></code></pre>
+</p>
+</div>
+</section>
+<section id="requirements">
+<h1>Requirements</h1>
+
+<p>
+  Range <abbr>I/O</abbr> functions are functions that take a range, possibly with other arguments, and return range <abbr>I/O</abbr> function objects that can be used in IOStreams insertion or extraction expressions to perform input or output using the range.
+</p>
+<p>
+  Range <abbr>I/O</abbr> functions and range <abbr>I/O</abbr> function objects must not copy the provided range.
+  For ranges given as an lvalue, they must keep a reference or pointer to the range.
+  Behaviour is undefined if the range <abbr>I/O</abbr> function object is used after the range goes out of scope.
+  For ranges given as an rvalue, they must move the range into a locally-owned variable.
+</p>
+
+<p>
+  Range <abbr>I/O</abbr> function objects must be <a href="http://en.cppreference.com/w/cpp/concept/MoveConstructible" class="concept">MoveConstructible</a>, <a href="http://en.cppreference.com/w/cpp/concept/MoveAssignable" class="concept">MoveAssignable</a>, and <a href="http://en.cppreference.com/w/cpp/concept/Destructible" class="concept">Destructible</a>.
+  No standard range <abbr>I/O</abbr> function objects are default-constructable – they must be constructed by using the associated range <abbr>I/O</abbr> function.
+</p>
+
+<p>
+  The objects returned by range <abbr>I/O</abbr> functions should be usable with input or output streams (as applicable) either by lvalue reference or rvalue reference.
+  This is to support the following two use cases (<code class="lang-cpp">r</code> is a <span class="concept">Range</span>):
+</p>
+
+<pre><code class="lang-cpp">cin <span class="delim">&gt;&gt;</span> back_insert<span class="delim">(</span>r<span class="delim">);</span></code></pre>
+
+<p class="continue">
+  and
+</p>
+
+<pre><code class="lang-cpp"><span class="keyword">auto</span> b <span class="delim">=</span> back_insert<span class="delim">(</span>r<span class="delim">);</span>
+cin <span class="delim">&gt;&gt;</span> b<span class="delim">;</span>
+<span class="comment">// b may now be queried for information about the last read</span></code></pre>
+
+<p>
+  The objects returned by range <abbr>I/O</abbr> functions must have a non-static <code class="lang-cpp"><span class="keyword">const</span></code> member function named <code class="lang-cpp">count</code>, which returns a <code class="lang-cpp">size_t</code> value giving the number of elements that were read or written in the last I/O operation.
+  The initial value is <code class="lang-cpp"><span class="literal int">0</span></code>.
+</p>
+
+<p>
+  All input and output operations should set the stream width value to <code class="lang-cpp"><span class="literal int">0</span></code> immediately before returning.
+</p>
+
+<section id="requirements-input">
+<h1>Input requirements</h1>
+
+<p>
+  Any formatting that would apply to the input of a single value type of the range must be applied to every element of the range.
+</p>
+
+<p>
+  After every element extraction, the state of the input stream is checked by the stream object’s conversion to <code class="lang-cpp"><span class="keyword">bool</span></code>, and if it is <code class="lang-cpp"><span class="keyword">false</span></code>, the operation ends immediately.
+</p>
+
+<p>
+  After the input operation, the range <abbr>I/O</abbr> function object’s <code class="lang-cpp">count<span class="delim">()</span></code> function returns the number of values that were successfully read from the input stream, parsed, and stored in the range in that operation.
+</p>
+</section>
+<section id="requirements-output">
+<h1>Output requirements</h1>
+
+<p>
+  Any formatting that would apply to the output of a single value type of the range must be applied to every element of the range.
+</p>
+
+<p>
+  After every element insertion, the state of the output stream is checked by the stream object’s conversion to <code class="lang-cpp"><span class="keyword">bool</span></code>, and if it is <code class="lang-cpp"><span class="keyword">false</span></code>, the operation ends immediately.
+</p>
+
+<p>
+  After the output operation, the range <abbr>I/O</abbr> function object’s <code class="lang-cpp">count<span class="delim">()</span></code> function returns the number of values that were successfully written to the output stream in that operation.
+</p>
+
+<p>
+  When the range is empty, an output operation on an ostream <code class="lang-cpp">os</code> should attempt an unformatted write of <code class="lang-cpp">os<span class="delim">.</span>width<span class="delim">()</span></code> copies of <code class="lang-cpp">os<span class="delim">.</span>fill<span class="delim">()</span></code> to <code class="lang-cpp">os</code>, then call <code class="lang-cpp">os<span class="delim">.</span>width<span class="delim">(</span><span class="literal int">0</span><span class="delim">)</span></code>.
+</p>
+</section>
+</section>
+<section id="input">
+<h1>Input operations</h1>
+
+<section id="back_insert-intro">
+<h1>Class template <code class="lang-cpp">range_back_inserter</code></h1>
+
+<div class="synopsis">
+<pre><code class="lang-cpp"><span class="pp">#include &lt;iosfwd&gt;</span>
+
+<span class="keyword">namespace</span> std <span class="delim">{</span>
+  <span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+  <span class="keyword">class</span> range_back_inserter <span class="delim">{</span>
+  <span class="keyword">public</span><span class="delim">:</span>
+    size_t count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span><span class="delim">;</span>
+    
+  <span class="keyword">private</span><span class="delim">:</span>
+    <span class="comment">// Construction is only possible via back_insert()</span>
+    range_back_inserter<span class="delim">();</span> <span class="comment">// = delete;</span>
+  <span class="delim">};</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;&amp;);</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> back_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> back_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">);</span>
+<span class="delim">}</span></code></pre>
+</div>
+</section>
+
+<section id="back_insert-operations">
+<h1><code class="lang-cpp">range_back_inserter</code> operations</h1>
+
+<section id="back_insert-queries">
+<h1><code class="lang-cpp">range_back_inserter</code> queries</h1>
+
+<div class="entry">
+<pre><code class="lang-cpp">size_t count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span><span class="delim">;</span></code></pre>
+<dl>
+  <dt>Returns:</dt>
+  <dd>The number of elements read in the last input operation, or <code class="lang-cpp"><span class="literal int">0</span></code> if there have been no read operations.</dd>
+</dl>
+</div>
+</section>
+
+<section id="back_insert-extractors">
+<h1><code class="lang-cpp">range_back_inserter</code> extractors</h1>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+  basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+    <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span> is<span class="delim">,</span> range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;</span> p<span class="delim">);</span>
+
+<span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+  basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+    <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span> is<span class="delim">,</span> range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;&amp;</span> p<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Effects:</dt>
+  <dd>Acts as a <span class="concept">RangeInputOperation</span>, reading values of the range’s value type from <code class="lang-cpp">is</code> into the range referenced by <code class="lang-cpp">p</code> until <code class="lang-cpp"><span class="keyword">bool</span><span class="delim">(</span>is<span class="delim">)</span></code> is <code class="lang-cpp"><span class="keyword">false</span></code>.</dd>
+  <dd>Each value <code class="lang-cpp">v</code> successfully read is added to the referenced range <code class="lang-cpp">r</code> by <code class="lang-cpp">r<span class="delim">.</span>push_back<span class="delim">(</span>v<span class="delim">)</span></code>.</dd>
+  <dt>Returns:</dt>
+  <dd><code class="lang-cpp">is</code>.</dd>
+  <dt>Note:</dt>
+  <dd>Lvalue and rvalue overloads are required to handle the expected use cases, but both do the same thing.</dd>
+</dl>
+</div>
+</section>
+
+<section id="back_insert-function">
+<h1><code class="lang-cpp">back_insert</code></h1>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+  range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> back_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Returns:</dt>
+  <dd>A <code class="lang-cpp">range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span></code> object that holds a reference to <code class="lang-cpp">range</code>.</dd>
+  <dt>Note:</dt>
+  <dd>Input requires an extant object of the type being read in. This overload allows the user to provide an instance of a type that cannot be default-constructed, which will then be stored in the returned object and, on input, will be used as in <code class="lang-cpp">cin <span class="delim">&gt;&gt;</span> v</code>.</dd>
+</dl>
+</div>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+  range_back_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> back_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Note:</dt>
+  <dd>Same as the previous overload with a default-constructed <code class="lang-cpp"><i>RangeValueType</i></code>.</dd>
+</dl>
+</div>
+</section>
+</section>
+
+<section id="front_insert-intro">
+<h1>Class template <code class="lang-cpp">range_front_inserter</code></h1>
+
+<div class="synopsis">
+<pre><code class="lang-cpp"><span class="pp">#include &lt;iosfwd&gt;</span>
+
+<span class="keyword">namespace</span> std <span class="delim">{</span>
+  <span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+  <span class="keyword">class</span> range_front_inserter <span class="delim">{</span>
+  <span class="keyword">public</span><span class="delim">:</span>
+    size_t count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span><span class="delim">;</span>
+    
+  <span class="keyword">private</span><span class="delim">:</span>
+    <span class="comment">// Construction is only possible via front_insert()</span>
+    range_front_inserter<span class="delim">();</span> <span class="comment">// = delete;</span>
+  <span class="delim">};</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;&amp;);</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> front_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> front_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">);</span>
+<span class="delim">}</span></code></pre>
+</div>
+</section>
+
+<section id="front_insert-operations">
+<h1><code class="lang-cpp">range_front_inserter</code> operations</h1>
+
+<section id="front_insert-queries">
+<h1><code class="lang-cpp">range_front_inserter</code> queries</h1>
+
+<div class="entry">
+<pre><code class="lang-cpp">size_t count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span><span class="delim">;</span></code></pre>
+<dl>
+  <dt>Returns:</dt>
+  <dd>The number of elements read in the last input operation, or <code class="lang-cpp"><span class="literal int">0</span></code> if there have been no read operations.</dd>
+</dl>
+</div>
+</section>
+
+<section id="front_insert-extractors">
+<h1><code class="lang-cpp">range_front_inserter</code> extractors</h1>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+  basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+    <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span> is<span class="delim">,</span> range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;</span> p<span class="delim">);</span>
+
+<span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+  basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+    <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span> is<span class="delim">,</span> range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;&amp;</span> p<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Effects:</dt>
+  <dd>Acts as a <span class="concept">RangeInputOperation</span>, reading values of the range’s value type from <code class="lang-cpp">is</code> into the range referenced by <code class="lang-cpp">p</code> until <code class="lang-cpp"><span class="keyword">bool</span><span class="delim">(</span>is<span class="delim">)</span></code> is <code class="lang-cpp"><span class="keyword">false</span></code>.</dd>
+  <dd>Each value <code class="lang-cpp">v</code> successfully read is added to the referenced range <code class="lang-cpp">r</code> by <code class="lang-cpp">r<span class="delim">.</span>push_front<span class="delim">(</span>v<span class="delim">)</span></code>.</dd>
+  <dt>Returns:</dt>
+  <dd><code class="lang-cpp">is</code>.</dd>
+  <dt>Note:</dt>
+  <dd>Lvalue and rvalue overloads are required to handle the expected use cases, but both do the same thing.</dd>
+</dl>
+</div>
+</section>
+
+<section id="front_insert-function">
+<h1><code class="lang-cpp">front_insert</code></h1>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+  range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> front_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Returns:</dt>
+  <dd>A <code class="lang-cpp">range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span></code> object that holds a reference to <code class="lang-cpp">range</code>.</dd>
+  <dt>Note:</dt>
+  <dd>Input requires an extant object of the type being read in. This overload allows the user to provide an instance of a type that cannot be default-constructed, which will then be stored in the returned object and, on input, will be used as in <code class="lang-cpp">cin <span class="delim">&gt;&gt;</span> v</code>.</dd>
+</dl>
+</div>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+  range_front_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> front_insert<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Note:</dt>
+  <dd>Same as the previous overload with a default-constructed <code class="lang-cpp"><i>RangeValueType</i></code>.</dd>
+</dl>
+</div>
+</section>
+</section>
+
+</section>
+<section id="output">
+<h1>Output operations</h1>
+
+<p>TBD</p>
+</section>
+</main>
+<footer>
+  <dl id="version-info">
+    <dt>Version</dt>
+    <dd>1.3.0</dd>
+    <dt>Date</dt>
+    <dd><time>2014-07-24</time></dd>
+  </dl>
+  <p id="copyright">
+    © Copyright 2014 Mark A. Gibbs. All rights reserved.
+  </p>
+</footer>
+</body>
+</html>

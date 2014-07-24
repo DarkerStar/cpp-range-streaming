@@ -1,0 +1,104 @@
+/*
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/* Sticky footer */
+html, body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+body > main {
+  flex: 1;
+}
+
+/* Borders for legibility */
+body > header, body > main, body > footer {
+  margin: 5em;
+}
+
+/* Link styling */
+a { text-decoration: none; }
+a { color: blue; }
+a:visited { color: purple; }
+a:active { color: red; }
+a:hover { color: red; }
+
+/* Code blocks */
+pre {
+  margin: 1em 2.5em;
+}
+
+/* Specification synopsis */
+.synopsis > p:first-of-type { font-weight: bold; }
+
+.synopsis > pre {
+  margin: 1em 1.5em;
+}
+
+/* "To be done" synopsis stuff.
+ * 
+ * Some stuff in the specification is planned but not implemented yet. It is
+ * shown in the synopsis, but faded out. It becomes easier to read when you
+ * hover over it. It is also labelled as not yet implemented.
+ */
+.synopsis .tbd {
+  display: block;
+  border: 1px dotted black;
+  margin: -1em 0;
+  padding: 0.25em 0.5em;
+  opacity: .2;
+}
+
+.synopsis .tbd::before {
+  content: "// Not yet implemented:";
+}
+
+.synopsis .tbd:hover {
+  opacity: .5;
+}
+
+/* Function specification entries.
+ * 
+ * Each entry starts with the signature of the function being described, then
+ * a definition list with things like "effects", "returns", etc..
+ * 
+ * When you hover over an entry, its background is highlighted to make it
+ * stand out.
+ */
+div.entry {
+  padding: 0.5em 1em;
+}
+
+div.entry:hover {
+  background: rgba(127,0,255,0.15);
+}
+
+div.entry > pre {
+  margin: 0 0 0.5em;
+}
+
+div.entry > dl {
+  margin-top: 0.5em;
+}
+
+div.entry > dl > dt {
+  font-style: italic;
+}

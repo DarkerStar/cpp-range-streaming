@@ -1,7 +1,9 @@
-Version 1.3.0 ----------------------------------------------------- [2014-07-23]
+Version 1.3.0 ----------------------------------------------------- [2014-07-24]
 
-*   Optional test with Boost.Range adaptors added - define HAVE_BOOST while
-    making the test suite to activate Boost testing.
+*   A documentation directory was added. It includes a specification of the
+    proposal in HTML. This is the first step in the migration away from using
+    comments and the README for documentation.
+*   back_insert() and front_insert() range input functions added.
 
 
 Version 1.2.0 ----------------------------------------------------- [2014-07-22]

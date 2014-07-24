@@ -1,3 +1,15 @@
+2014-07-24  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
+     
+     * include/stream_range: Removed documentation in comments.
+     
+     * doc/specification.html: New documentation file.
+     
+     * doc/style/specification.css: New documentation style file.
+     
+     * doc/style/code.css: New documentation style file.
+
+
+
 2014-07-23  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
      
      * include/stream_range: Added back_insert() and front_insert().
