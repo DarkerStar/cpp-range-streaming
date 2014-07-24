@@ -1,0 +1,10 @@
+Unsorted ideas for improving the proposal:
+
+*   Rename header from <stream_range> to <rangeio>.
+
+*   Collapse *insert_n() functions into *insert() functions like this:
+    
+        *insert(Range& r,
+               size_t n = numeric_limits<size_t>::max(),
+               RangeValueType v = RangeValueType{});
+
