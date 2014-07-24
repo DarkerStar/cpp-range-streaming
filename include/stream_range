@@ -56,6 +56,13 @@ auto back_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value_
 template <typename Range>
 auto back_insert(Range& r) -> range_back_inserter<Range>;
 
+template <typename Range>
+auto back_insert_n(Range& r, size_t n, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+  range_back_inserter<Range>;
+
+template <typename Range>
+auto back_insert_n(Range& r, size_t n) -> range_back_inserter<Range>;
+
 /*# Forward declarations for front_insert() ###################################*/
 
 template <typename Range>
@@ -103,7 +110,7 @@ auto make_iterator_range(Iterator b, Iterator e) -> iterator_range<Iterator>
 template <typename CharT, typename Traits>
 struct stream_formatting_saver
 {
-  explicit stream_formatting_saver(std::basic_ios<CharT, Traits>& s) :
+  explicit stream_formatting_saver(basic_ios<CharT, Traits>& s) :
     stream_{s},
     flags_{s.flags()},
     width_{s.width()},
@@ -119,10 +126,10 @@ struct stream_formatting_saver
     stream_.width(width_);
   }
   
-  std::basic_ios<CharT, Traits>& stream_;
-  typename std::basic_ios<CharT, Traits>::fmtflags const flags_;
-  std::streamsize const width_;
-  std::streamsize const precision_;
+  basic_ios<CharT, Traits>& stream_;
+  typename basic_ios<CharT, Traits>::fmtflags const flags_;
+  streamsize const width_;
+  streamsize const precision_;
   CharT const fill_;
 };
 
@@ -294,6 +301,9 @@ private:
   // Reference to the range, obviously.
   Range& range_;
   
+  // The maximum number of elements to read in a single operation.
+  size_t const amount_ = 0;
+  
   // An instance of the range's value type, to use as the target to read into.
   using value_type = typename iterator_traits<decltype(range_.begin())>::value_type;
   value_type value_;
@@ -301,9 +311,10 @@ private:
   // The number of elements read in the last read operation.
   size_t count_ = 0;
   
-  range_back_inserter(Range& r, value_type v) :
+  range_back_inserter(Range& r, size_t n, value_type v) :
     range_{r},
-    value_{std::move(v)}
+    amount_{n},
+    value_{move(v)}
   {}
   
   // Remove default constructor.
@@ -316,16 +327,20 @@ private:
   // Friend declarations for extraction operators. Note that both lvalue and
   // rvalue versions are needed.
   template <typename CharT, typename Traits, typename Range2>
-  friend auto operator>>(std::basic_istream<CharT, Traits>& in, range_back_inserter<Range2>& rbi) ->
-    std::basic_istream<CharT, Traits>&;
+  friend auto operator>>(basic_istream<CharT, Traits>& in, range_back_inserter<Range2>& rbi) ->
+    basic_istream<CharT, Traits>&;
   
   template <typename CharT, typename Traits, typename Range2>
-  friend auto operator>>(std::basic_istream<CharT, Traits>& in, range_back_inserter<Range2>&& rbi) ->
-    std::basic_istream<CharT, Traits>&;
+  friend auto operator>>(basic_istream<CharT, Traits>& in, range_back_inserter<Range2>&& rbi) ->
+    basic_istream<CharT, Traits>&;
   
   // Friend declarations for back_insert().
   friend auto back_insert<Range>(Range&, value_type) -> range_back_inserter<Range>;
   friend auto back_insert<Range>(Range&) -> range_back_inserter<Range>;
+  
+  // Friend declarations for back_insert_n().
+  friend auto back_insert_n<Range>(Range&, size_t, value_type) -> range_back_inserter<Range>;
+  friend auto back_insert_n<Range>(Range&, size_t) -> range_back_inserter<Range>;
 };
 
 /* 
@@ -339,18 +354,19 @@ private:
  *   // check p.count() for the number of elements read.
  */
 template <typename CharT, typename Traits, typename Range>
-auto operator>>(std::basic_istream<CharT, Traits>& in, range_back_inserter<Range>& rbi) ->
-  std::basic_istream<CharT, Traits>&
+auto operator>>(basic_istream<CharT, Traits>& in, range_back_inserter<Range>& rbi) ->
+  basic_istream<CharT, Traits>&
 {
   rbi.count_ = 0;
   
-  auto v = std::move(rbi.value_);
+  auto v = move(rbi.value_);
   
   auto const formatting = stream_range_detail::stream_formatting_saver<CharT, Traits>{in};
   
-  while (in >> v)
+  auto n = rbi.amount_;
+  while (n-- && in >> v)
   {
-    rbi.range_.push_back(std::move(v));
+    rbi.range_.push_back(move(v));
     ++rbi.count_;
     
     formatting.restore();
@@ -360,8 +376,8 @@ auto operator>>(std::basic_istream<CharT, Traits>& in, range_back_inserter<Range
 }
 
 template <typename CharT, typename Traits, typename Range>
-auto operator>>(std::basic_istream<CharT, Traits>& in, range_back_inserter<Range>&& rbi) ->
-  std::basic_istream<CharT, Traits>&
+auto operator>>(basic_istream<CharT, Traits>& in, range_back_inserter<Range>&& rbi) ->
+  basic_istream<CharT, Traits>&
 {
   return in >> rbi;
 }
@@ -382,13 +398,38 @@ template <typename Range>
 auto back_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value_type t) ->
   range_back_inserter<Range>
 {
-  return {r, std::move(t)};
+  return {r, size_t{0} - 1, move(t)};
 }
 
 template <typename Range>
 auto back_insert(Range& r) -> range_back_inserter<Range>
 {
   return back_insert(r, typename iterator_traits<decltype(r.begin())>::value_type{});
+}
+
+/* 
+ * The back_insert_n() functions.
+ * 
+ * One version of this function allows you to pass an object of the range's
+ * value type as an argument. This value is used as the initial value when
+ * reading (because the nature of using istreams to read is that you need an
+ * extant value of the type to read into). This allows you to use types that
+ * don't have an accessible default constructor.
+ * 
+ * The second version simply calls the first version with a default-constructed
+ * instance of the range's value type.
+ */
+template <typename Range>
+auto back_insert_n(Range& r, size_t n, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+  range_back_inserter<Range>
+{
+  return {r, n, move(t)};
+}
+
+template <typename Range>
+auto back_insert_n(Range& r, size_t n) -> range_back_inserter<Range>
+{
+  return back_insert_n(r, n, typename iterator_traits<decltype(r.begin())>::value_type{});
 }
 
 /*# Implementations for front_insert() ########################################*/
@@ -433,7 +474,7 @@ private:
   
   range_front_inserter(Range& r, value_type v) :
     range_{r},
-    value_{std::move(v)}
+    value_{move(v)}
   {}
   
   // Remove default constructor.
@@ -446,12 +487,12 @@ private:
   // Friend declarations for extraction operators. Note that both lvalue and
   // rvalue versions are needed.
   template <typename CharT, typename Traits, typename Range2>
-  friend auto operator>>(std::basic_istream<CharT, Traits>& in, range_front_inserter<Range2>& rbi) ->
-    std::basic_istream<CharT, Traits>&;
+  friend auto operator>>(basic_istream<CharT, Traits>& in, range_front_inserter<Range2>& rbi) ->
+    basic_istream<CharT, Traits>&;
   
   template <typename CharT, typename Traits, typename Range2>
-  friend auto operator>>(std::basic_istream<CharT, Traits>& in, range_front_inserter<Range2>&& rbi) ->
-    std::basic_istream<CharT, Traits>&;
+  friend auto operator>>(basic_istream<CharT, Traits>& in, range_front_inserter<Range2>&& rbi) ->
+    basic_istream<CharT, Traits>&;
   
   // Friend declarations for front_insert().
   friend auto front_insert<Range>(Range&, value_type) -> range_front_inserter<Range>;
@@ -469,18 +510,18 @@ private:
  *   // check p.count() for the number of elements read.
  */
 template <typename CharT, typename Traits, typename Range>
-auto operator>>(std::basic_istream<CharT, Traits>& in, range_front_inserter<Range>& rbi) ->
-  std::basic_istream<CharT, Traits>&
+auto operator>>(basic_istream<CharT, Traits>& in, range_front_inserter<Range>& rbi) ->
+  basic_istream<CharT, Traits>&
 {
   rbi.count_ = 0;
   
-  auto v = std::move(rbi.value_);
+  auto v = move(rbi.value_);
   
   auto const formatting = stream_range_detail::stream_formatting_saver<CharT, Traits>{in};
   
   while (in >> v)
   {
-    rbi.range_.push_front(std::move(v));
+    rbi.range_.push_front(move(v));
     ++rbi.count_;
     
     formatting.restore();
@@ -490,8 +531,8 @@ auto operator>>(std::basic_istream<CharT, Traits>& in, range_front_inserter<Rang
 }
 
 template <typename CharT, typename Traits, typename Range>
-auto operator>>(std::basic_istream<CharT, Traits>& in, range_front_inserter<Range>&& rbi) ->
-  std::basic_istream<CharT, Traits>&
+auto operator>>(basic_istream<CharT, Traits>& in, range_front_inserter<Range>&& rbi) ->
+  basic_istream<CharT, Traits>&
 {
   return in >> rbi;
 }
@@ -512,7 +553,7 @@ template <typename Range>
 auto front_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value_type t) ->
   range_front_inserter<Range>
 {
-  return {r, std::move(t)};
+  return {r, move(t)};
 }
 
 template <typename Range>

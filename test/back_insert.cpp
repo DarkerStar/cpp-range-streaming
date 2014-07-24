@@ -27,7 +27,6 @@
 #include <type_traits>
 #include <vector>
 
-
 #include <stream_range>
 
 #include "gtest/gtest.h"
@@ -177,5 +176,69 @@ TEST(BackInsert, Formatting)
     EXPECT_EQ(0x10, r.at(0));
     EXPECT_EQ(0x10, r.at(1));
     EXPECT_EQ(0x10, r.at(2));
+  }
+}
+
+/* Test: Verify the types associated with back_insert_n() are correct.
+ * 
+ * The return value of back_insert_n() is part of the specification - it must
+ * return a properly-templated range_back_inserter<>. And *that* type should
+ * have a count() member function that returns size_t.
+ */
+TEST(BackInsertN, Types)
+{
+  auto v = std::vector<double>{};
+  auto const l = std::list<std::string>{};
+  
+  EXPECT_TRUE((std::is_same<decltype(std::back_insert_n(v, std::size_t{})), std::range_back_inserter<decltype(v)>>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::back_insert_n(l, std::size_t{})), std::range_back_inserter<decltype(l)>>::value));
+  
+  EXPECT_TRUE((std::is_same<decltype(std::back_insert_n(v, std::size_t{}, v.front())), std::range_back_inserter<decltype(v)>>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::back_insert_n(l, std::size_t{}, l.front())), std::range_back_inserter<decltype(l)>>::value));
+  
+  EXPECT_TRUE((std::is_same<decltype(std::back_insert_n(v, std::size_t{}).count()), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::back_insert_n(v, std::size_t{}, v.front()).count()), std::size_t>::value));
+}
+
+/* Test: Input into a range using back_insert_n().
+ * 
+ * Everything in the input sequence that can be converted to the range's value
+ * type should be read until either a conversion error, an I/O error, or EOF.
+ * All elements read should be appended to the back of the input sequence, in
+ * order of reading.
+ */
+TEST(BackInsertN, Input)
+{
+  {
+    auto r = std::vector<double>{};
+    
+    std::istringstream iss{"12.3 .34 1e5 -.1"};
+    iss.imbue(std::locale::classic());
+    
+    EXPECT_TRUE(iss >> std::back_insert_n(r, 2));
+    EXPECT_FALSE(iss.eof());
+    EXPECT_FALSE(iss.fail());
+    EXPECT_FALSE(iss.bad());
+    
+    EXPECT_EQ(std::size_t{2}, r.size());
+    EXPECT_EQ(12.3, r.at(0));
+    EXPECT_EQ(.34, r.at(1));
+  }
+  {
+    auto r = std::vector<double>{};
+    
+    std::istringstream iss{"12.3 .34 1e5 -.1"};
+    iss.imbue(std::locale::classic());
+    
+    EXPECT_FALSE(iss >> std::back_insert_n(r, 10));
+    EXPECT_TRUE(iss.eof());
+    EXPECT_TRUE(iss.fail());
+    EXPECT_FALSE(iss.bad());
+    
+    EXPECT_EQ(std::size_t{4}, r.size());
+    EXPECT_EQ(12.3, r.at(0));
+    EXPECT_EQ(.34, r.at(1));
+    EXPECT_EQ(1e5, r.at(2));
+    EXPECT_EQ(-.1, r.at(3));
   }
 }
