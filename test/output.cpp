@@ -178,7 +178,7 @@ TEST(Output, LvalueRange)
     oss.imbue(std::locale::classic());
     
     EXPECT_TRUE(oss << std::stream_range(r));
-    EXPECT_EQ(oss.str(), "112358");
+    EXPECT_EQ("112358", oss.str());
   }
   
   {
@@ -190,7 +190,7 @@ TEST(Output, LvalueRange)
     oss.imbue(std::locale::classic());
     
     EXPECT_TRUE(oss << std::stream_range(r));
-    EXPECT_EQ(oss.str(), "works");
+    EXPECT_EQ("works", oss.str());
   }
 }
 
@@ -209,7 +209,7 @@ TEST(Output, RvalueRange)
     oss.imbue(std::locale::classic());
     
     EXPECT_TRUE(oss << std::stream_range(std::array<int, 4>{ 2, 4, 6, 8 }));
-    EXPECT_EQ(oss.str(), "2468");
+    EXPECT_EQ("2468", oss.str());
   }
   
   {
@@ -221,7 +221,7 @@ TEST(Output, RvalueRange)
     oss.imbue(std::locale::classic());
     
     EXPECT_TRUE(oss << std::stream_range(noncopyable_range<int, 3>{ -1, -2, -3 }));
-    EXPECT_EQ(oss.str(), "-1-2-3");
+    EXPECT_EQ("-1-2-3", oss.str());
   }
 }
 
@@ -245,7 +245,7 @@ TEST(Output, Formatting)
     oss.setf(std::ios_base::showbase);
     
     EXPECT_TRUE(oss << std::stream_range(r));
-    EXPECT_EQ(oss.str(), "0X287..." "0X71A..." "0XE6...." "0X1A...." "0X29E...");
+    EXPECT_EQ("0X287..." "0X71A..." "0XE6...." "0X1A...." "0X29E...", oss.str());
   }
   
   {
@@ -260,7 +260,7 @@ TEST(Output, Formatting)
     oss.setf(std::ios_base::showpoint);
     
     EXPECT_TRUE(oss << std::stream_range(r));
-    EXPECT_EQ(oss.str(), "____1.00" "-___2.30" "____6.67" "-__0.123" "-___1.23");
+    EXPECT_EQ("____1.00" "-___2.30" "____6.67" "-__0.123" "-___1.23", oss.str());
   }
 }
 
@@ -281,7 +281,7 @@ TEST(DelimitedOutput, LvalueRange)
     std::ostringstream oss;
     
     EXPECT_TRUE(oss << std::stream_range(r, d));
-    EXPECT_EQ(oss.str(), "w***o***r***k***s");
+    EXPECT_EQ("w***o***r***k***s", oss.str());
   }
   
   // Rvalue delimiter.
@@ -289,7 +289,7 @@ TEST(DelimitedOutput, LvalueRange)
     std::ostringstream oss;
     
     EXPECT_TRUE(oss << std::stream_range(r, noncopyable_delimiter{"++"}));
-    EXPECT_EQ(oss.str(), "w++o++r++k++s");
+    EXPECT_EQ("w++o++r++k++s", oss.str());
   }
   
   // "Special" delimiter.
@@ -298,7 +298,7 @@ TEST(DelimitedOutput, LvalueRange)
     oss.imbue(std::locale::classic());
     
     EXPECT_TRUE(oss << std::stream_range(r, incrementing_integer_delimiter{}));
-    EXPECT_EQ(oss.str(), "w0o1r2k3s");
+    EXPECT_EQ("w0o1r2k3s", oss.str());
   }
 }
 
@@ -318,7 +318,7 @@ TEST(DelimitedOutput, RvalueRange)
     oss.imbue(std::locale::classic());
     
     EXPECT_TRUE(oss << std::stream_range(noncopyable_range<int, 4>{ 2, 4, 6, 8 }, d));
-    EXPECT_EQ(oss.str(), "2%*4%*6%*8");
+    EXPECT_EQ("2%*4%*6%*8", oss.str());
   }
   
   // Rvalue delimiter.
@@ -327,7 +327,7 @@ TEST(DelimitedOutput, RvalueRange)
     oss.imbue(std::locale::classic());
     
     EXPECT_TRUE(oss << std::stream_range(noncopyable_range<int, 4>{ 2, 4, 6, 8 }, noncopyable_delimiter{";"}));
-    EXPECT_EQ(oss.str(), "2;4;6;8");
+    EXPECT_EQ("2;4;6;8", oss.str());
   }
   
   // "Special" delimiter.
@@ -336,7 +336,7 @@ TEST(DelimitedOutput, RvalueRange)
     oss.imbue(std::locale::classic());
     
     EXPECT_TRUE(oss << std::stream_range(noncopyable_range<int, 4>{ 2, 4, 6, 8 }, incrementing_integer_delimiter{}));
-    EXPECT_EQ(oss.str(), "2041628");
+    EXPECT_EQ("2041628", oss.str());
   }
 }
 
@@ -365,7 +365,7 @@ TEST(DelimitedOutput, Formatting)
     oss.setf(std::ios_base::showbase);
     
     EXPECT_TRUE(oss << std::stream_range(r, 23));
-    EXPECT_EQ(oss.str(), "0X287...0X17" "0X71A...0X17" "0XE6....0X17" "0X1A....0X17" "0X29E...");
+    EXPECT_EQ("0X287...0X17" "0X71A...0X17" "0XE6....0X17" "0X1A....0X17" "0X29E...", oss.str());
   }
   
   {
@@ -380,6 +380,6 @@ TEST(DelimitedOutput, Formatting)
     oss.setf(std::ios_base::showpoint);
     
     EXPECT_TRUE(oss << std::stream_range(r, -1.23456));
-    EXPECT_EQ(oss.str(), "____1.00-1.23" "-___2.30-1.23" "____6.67-1.23" "-__0.123-1.23" "-___1.23");
+    EXPECT_EQ("____1.00-1.23" "-___2.30-1.23" "____6.67-1.23" "-__0.123-1.23" "-___1.23", oss.str());
   }
 }

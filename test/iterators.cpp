@@ -137,7 +137,7 @@ TEST(Iterators, Input)
   EXPECT_TRUE(std::equal(a.begin(), a.end(), expected.begin()));
   
   EXPECT_TRUE(iss >> d);
-  EXPECT_EQ(d, 6.6);
+  EXPECT_EQ(6.6, d);
 }
 
 /* Test: Output of a range given by an iterator pair.
@@ -156,7 +156,7 @@ TEST(Iterators, Output)
     oss.imbue(std::locale::classic());
     
     EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end()));
-    EXPECT_EQ(oss.str(), "abcd");
+    EXPECT_EQ("abcd", oss.str());
   }
   
   {
@@ -169,7 +169,7 @@ TEST(Iterators, Output)
     
     EXPECT_TRUE(oss << std::stream_iterator_range(
       std::istream_iterator<int>{in}, std::istream_iterator<int>{}));
-    EXPECT_EQ(oss.str(), "32485961");
+    EXPECT_EQ("32485961", oss.str());
   }
 }
 
@@ -191,7 +191,7 @@ TEST(Iterators, DelimitedOutput)
     std::ostringstream oss;
     
     EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end(), d));
-    EXPECT_EQ(oss.str(), "a***b***c***d");
+    EXPECT_EQ("a***b***c***d", oss.str());
   }
   
   // Rvalue delimiter.
@@ -199,7 +199,7 @@ TEST(Iterators, DelimitedOutput)
     std::ostringstream oss;
     
     EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end(), noncopyable_delimiter{"++"}));
-    EXPECT_EQ(oss.str(), "a++b++c++d");
+    EXPECT_EQ("a++b++c++d", oss.str());
   }
   
   // "Special" delimiter.
@@ -208,6 +208,6 @@ TEST(Iterators, DelimitedOutput)
     oss.imbue(std::locale::classic());
     
     EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end(), incrementing_integer_delimiter{}));
-    EXPECT_EQ(oss.str(), "a0b1c2d");
+    EXPECT_EQ("a0b1c2d", oss.str());
   }
 }

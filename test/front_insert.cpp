@@ -72,11 +72,11 @@ TEST(FrontInsert, Input)
     EXPECT_TRUE(iss.fail());
     EXPECT_FALSE(iss.bad());
     
-    EXPECT_EQ(r.size(), std::size_t{4});
-    EXPECT_EQ(r.at(0), -.1);
-    EXPECT_EQ(r.at(1), 1e5);
-    EXPECT_EQ(r.at(2), .34);
-    EXPECT_EQ(r.at(3), 12.3);
+    EXPECT_EQ(std::size_t{4}, r.size());
+    EXPECT_EQ(-.1, r.at(0));
+    EXPECT_EQ(1e5, r.at(1));
+    EXPECT_EQ(.34, r.at(2));
+    EXPECT_EQ(12.3, r.at(3));
   }
   {
     auto r = std::list<int>{ 3, 4, 5 };
@@ -89,14 +89,14 @@ TEST(FrontInsert, Input)
     EXPECT_TRUE(iss.fail());
     EXPECT_FALSE(iss.bad());
     
-    EXPECT_EQ(r.size(), std::size_t{6});
+    EXPECT_EQ(std::size_t{6}, r.size());
     for (auto i = r.cbegin(); i != r.cend(); ++i)
-      EXPECT_EQ(*i, std::distance(r.cbegin(), i));
+      EXPECT_EQ(std::distance(r.cbegin(), i), *i);
     
     iss.clear();
     auto c = 'a';
     EXPECT_TRUE(iss >> c);
-    EXPECT_EQ(c, 'x');
+    EXPECT_EQ('x', c);
   }
 }
 
@@ -116,23 +116,23 @@ TEST(FrontInsert, ErrorChecking)
     iss.imbue(std::locale::classic());
     
     auto proxy_object = std::front_insert(r);
-    EXPECT_EQ(proxy_object.count(), std::size_t{0});
+    EXPECT_EQ(std::size_t{0}, proxy_object.count());
     
     EXPECT_FALSE(iss >> proxy_object);
     EXPECT_FALSE(iss.eof());
     EXPECT_TRUE(iss.fail());
     EXPECT_FALSE(iss.bad());
     
-    EXPECT_EQ(proxy_object.count(), std::size_t{3});
+    EXPECT_EQ(std::size_t{3}, proxy_object.count());
     
-    EXPECT_EQ(r.size(), std::size_t{6});
+    EXPECT_EQ(std::size_t{6}, r.size());
     for (auto i = r.cbegin(); i != r.cend(); ++i)
-      EXPECT_EQ(*i, std::distance(r.cbegin(), i));
+      EXPECT_EQ(std::distance(r.cbegin(), i), *i);
     
     iss.clear();
     auto c = 'a';
     EXPECT_TRUE(iss >> c);
-    EXPECT_EQ(c, 'x');
+    EXPECT_EQ('x', c);
   }
 }
 

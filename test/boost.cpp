@@ -56,13 +56,13 @@ TEST(Boost, AdaptedOutput)
     std::ostringstream oss{};
     
     EXPECT_TRUE(oss << std::stream_range(v | reversed | filtered(is_even{})));
-    EXPECT_EQ(oss.str(), "108642");
+    EXPECT_EQ("108642", oss.str());
   }
   
   {
     std::ostringstream oss{};
     
     EXPECT_TRUE(oss << std::stream_range(v | reversed | filtered(is_odd{}), ", "));
-    EXPECT_EQ(oss.str(), "9, 7, 5, 3, 1");
+    EXPECT_EQ("9, 7, 5, 3, 1", oss.str());
   }
 }

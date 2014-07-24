@@ -55,7 +55,7 @@ TEST(Input, Range)
   EXPECT_TRUE(std::equal(a.begin(), a.end(), expected.begin()));
   
   EXPECT_TRUE(iss >> d);
-  EXPECT_EQ(d, 6.6);
+  EXPECT_EQ(6.6, d);
 }
 
 /* Test: Input into an rvalue range.
@@ -83,7 +83,7 @@ TEST(Input, Discarding)
   
   auto d = 0.0;
   EXPECT_TRUE(iss >> d);
-  EXPECT_EQ(d, 6);
+  EXPECT_EQ(6, d);
 }
 
 /* Test: Preservation of formatting from element to element.
@@ -100,13 +100,13 @@ TEST(Input, Formatting)
     iss.width(2);
     
     EXPECT_TRUE(iss >> std::stream_range(r));
-    EXPECT_EQ(r[0], "ab");
-    EXPECT_EQ(r[1], "cd");
-    EXPECT_EQ(r[2], "ef");
+    EXPECT_EQ("ab", r[0]);
+    EXPECT_EQ("cd", r[1]);
+    EXPECT_EQ("ef", r[2]);
     
     auto c = 'a';
     EXPECT_TRUE(iss >> c);
-    EXPECT_EQ(c, 'g');
+    EXPECT_EQ('g', c);
   }
   {
     auto r = std::array<int, 3>{};
@@ -116,8 +116,8 @@ TEST(Input, Formatting)
     iss.setf(std::ios_base::hex, std::ios_base::basefield);
     
     EXPECT_TRUE(iss >> std::stream_range(r));
-    EXPECT_EQ(r[0], 0x10);
-    EXPECT_EQ(r[1], 0x10);
-    EXPECT_EQ(r[2], 0x10);
+    EXPECT_EQ(0x10, r[0]);
+    EXPECT_EQ(0x10, r[1]);
+    EXPECT_EQ(0x10, r[2]);
   }
 }
