@@ -135,3 +135,46 @@ TEST(FrontInsert, ErrorChecking)
     EXPECT_EQ(c, 'x');
   }
 }
+
+/* Test: Formatting when using front_insert().
+ * 
+ * Whatever the formatting state at the beginning of the input of a streamed
+ * range, it should be applied to every element in the range.
+ */
+TEST(FrontInsert, Formatting)
+{
+  {
+    auto r = std::deque<std::string>{};
+    
+    std::istringstream iss{"abcdefg"};
+    iss.width(2);
+    
+    EXPECT_FALSE(iss >> front_insert(r));
+    EXPECT_TRUE(iss.eof());
+    EXPECT_TRUE(iss.fail());
+    EXPECT_FALSE(iss.bad());
+    
+    EXPECT_EQ(std::size_t{4}, r.size());
+    EXPECT_EQ("ab", r.at(3));
+    EXPECT_EQ("cd", r.at(2));
+    EXPECT_EQ("ef", r.at(1));
+    EXPECT_EQ("g", r.at(0));
+  }
+  {
+    auto r = std::deque<int>{};
+    
+    std::istringstream iss{"10 0x10 010"};
+    iss.imbue(std::locale::classic());
+    iss.setf(std::ios_base::hex, std::ios_base::basefield);
+    
+    EXPECT_FALSE(iss >> front_insert(r));
+    EXPECT_TRUE(iss.eof());
+    EXPECT_TRUE(iss.fail());
+    EXPECT_FALSE(iss.bad());
+    
+    EXPECT_EQ(std::size_t{3}, r.size());
+    EXPECT_EQ(0x10, r.at(0));
+    EXPECT_EQ(0x10, r.at(1));
+    EXPECT_EQ(0x10, r.at(2));
+  }
+}
