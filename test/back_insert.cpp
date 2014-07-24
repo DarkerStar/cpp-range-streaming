@@ -203,9 +203,9 @@ TEST(BackInsertN, Types)
 /* Test: Input into a range using back_insert_n().
  * 
  * Everything in the input sequence that can be converted to the range's value
- * type should be read until either a conversion error, an I/O error, or EOF.
- * All elements read should be appended to the back of the input sequence, in
- * order of reading.
+ * type should be read until either n items are read, or there is a
+ * conversion error, an I/O error, or EOF. All elements read should be appended
+ * to the back of the input sequence, in order of reading.
  */
 TEST(BackInsertN, Input)
 {

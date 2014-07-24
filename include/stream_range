@@ -18,7 +18,7 @@
 
 /* 
  * This C++ header file implements a proposed extension to the C++ standard
- * library that allows for easy and intuitive input and output of sequences,
+ * library that allows for easy and intuitive input and output of ranges,
  * without requiring the use of the algorithms library.
  * 
  * For more details, check https://github.com/DarkerStar/cpp-range-streaming
@@ -74,6 +74,13 @@ auto front_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value
 
 template <typename Range>
 auto front_insert(Range& r) -> range_front_inserter<Range>;
+
+template <typename Range>
+auto front_insert_n(Range& r, size_t n, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+  range_front_inserter<Range>;
+
+template <typename Range>
+auto front_insert_n(Range& r, size_t n) -> range_front_inserter<Range>;
 
 /* 
  * All of the monkeyworks necessary for range streaming is in this namespace.
@@ -372,6 +379,8 @@ auto operator>>(basic_istream<CharT, Traits>& in, range_back_inserter<Range>& rb
     formatting.restore();
   }
   
+  in.width(0);
+  
   return in;
 }
 
@@ -465,6 +474,9 @@ private:
   // Reference to the range, obviously.
   Range& range_;
   
+  // The maximum number of elements to read in a single operation.
+  size_t const amount_ = 0;
+  
   // An instance of the range's value type, to use as the target to read into.
   using value_type = typename iterator_traits<decltype(range_.begin())>::value_type;
   value_type value_;
@@ -472,8 +484,9 @@ private:
   // The number of elements read in the last read operation.
   size_t count_ = 0;
   
-  range_front_inserter(Range& r, value_type v) :
+  range_front_inserter(Range& r, size_t n, value_type v) :
     range_{r},
+    amount_{n},
     value_{move(v)}
   {}
   
@@ -497,6 +510,10 @@ private:
   // Friend declarations for front_insert().
   friend auto front_insert<Range>(Range&, value_type) -> range_front_inserter<Range>;
   friend auto front_insert<Range>(Range&) -> range_front_inserter<Range>;
+  
+  // Friend declarations for front_insert_n().
+  friend auto front_insert_n<Range>(Range&, size_t, value_type) -> range_front_inserter<Range>;
+  friend auto front_insert_n<Range>(Range&, size_t) -> range_front_inserter<Range>;
 };
 
 /* 
@@ -510,31 +527,34 @@ private:
  *   // check p.count() for the number of elements read.
  */
 template <typename CharT, typename Traits, typename Range>
-auto operator>>(basic_istream<CharT, Traits>& in, range_front_inserter<Range>& rbi) ->
+auto operator>>(basic_istream<CharT, Traits>& in, range_front_inserter<Range>& rfi) ->
   basic_istream<CharT, Traits>&
 {
-  rbi.count_ = 0;
+  rfi.count_ = 0;
   
-  auto v = move(rbi.value_);
+  auto v = move(rfi.value_);
   
   auto const formatting = stream_range_detail::stream_formatting_saver<CharT, Traits>{in};
   
-  while (in >> v)
+  auto n = rfi.amount_;
+  while (n-- && in >> v)
   {
-    rbi.range_.push_front(move(v));
-    ++rbi.count_;
+    rfi.range_.push_front(move(v));
+    ++rfi.count_;
     
     formatting.restore();
   }
+  
+  in.width(0);
   
   return in;
 }
 
 template <typename CharT, typename Traits, typename Range>
-auto operator>>(basic_istream<CharT, Traits>& in, range_front_inserter<Range>&& rbi) ->
+auto operator>>(basic_istream<CharT, Traits>& in, range_front_inserter<Range>&& rfi) ->
   basic_istream<CharT, Traits>&
 {
-  return in >> rbi;
+  return in >> rfi;
 }
 
 /* 
@@ -553,13 +573,38 @@ template <typename Range>
 auto front_insert(Range& r, typename iterator_traits<decltype(r.begin())>::value_type t) ->
   range_front_inserter<Range>
 {
-  return {r, move(t)};
+  return {r, size_t{0} - 1, move(t)};
 }
 
 template <typename Range>
 auto front_insert(Range& r) -> range_front_inserter<Range>
 {
   return front_insert(r, typename iterator_traits<decltype(r.begin())>::value_type{});
+}
+
+/* 
+ * The front_insert_n() functions.
+ * 
+ * One version of this function allows you to pass an object of the range's
+ * value type as an argument. This value is used as the initial value when
+ * reading (because the nature of using istreams to read is that you need an
+ * extant value of the type to read into). This allows you to use types that
+ * don't have an accessible default constructor.
+ * 
+ * The second version simply calls the first version with a default-constructed
+ * instance of the range's value type.
+ */
+template <typename Range>
+auto front_insert_n(Range& r, size_t n, typename iterator_traits<decltype(r.begin())>::value_type t) ->
+  range_front_inserter<Range>
+{
+  return {r, n, move(t)};
+}
+
+template <typename Range>
+auto front_insert_n(Range& r, size_t n) -> range_front_inserter<Range>
+{
+  return front_insert_n(r, n, typename iterator_traits<decltype(r.begin())>::value_type{});
 }
 
 } // namespace std
