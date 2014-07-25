@@ -1,3 +1,83 @@
+2014-07-25  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
+     
+     * include/stream_range: Removed documentation in comments.
+     (std::overwrite): New function template.
+     (std::range_overwriter): New class template.
+     (std::operator>> with std::range_overwriter&): New insert operator.
+     (std::operator>> with std::range_overwriter&&): New insert operator.
+     (std::back_insert_n): New function template (two overloads).
+     (std::range_back_inserter): Add support for n.
+     (std::operator>> with std::range_back_inserter&): Add support for n.
+     (std::operator>> with std::range_back_inserter&&): Add support for n.
+     (std::front_insert_n): New function template (two overloads).
+     (std::range_front_inserter): Add support for n.
+     (std::operator>> with std::range_front_inserter&): Add support for n.
+     (std::operator>> with std::range_front_inserter&&): Add support for n.
+     (std::insert): New function template (two overloads).
+     (std::insert_n): New function template (two overloads).
+     (std::range_inserter): New class template.
+     (std::operator>> with std::range_inserter&): New insert operator.
+     (std::operator>> with std::range_inserter&&): New insert operator.
+     (std::stream_range_detail::RangeIterator): New helper type.
+     (std::stream_range_detail::RangeValueType): New helper type.
+     
+     * test/Makefile: Added overwrite.cpp and insert.cpp tests.
+     
+     * test/back_insert.cpp: Added back_insert_n tests and swapped EXPECT_EQ args.
+     (BackInsert, Input): Swapped arguments in all EXPECT_EQ().
+     (BackInsert, ErrorChecking): Swapped arguments in all EXPECT_EQ().
+     (BackInsert, Formatting): Swapped arguments in all EXPECT_EQ().
+     (BackInsertN, Types): New test.
+     (BackInsertN, Input): New test.
+     
+     * test/boost.cpp: Swapped arguments in all EXPECT_EQ().
+     (Boost, AdaptedOutput): Swapped arguments in all EXPECT_EQ().
+     
+     * test/front_insert.cpp: Added front_insert_n tests and swapped EXPECT_EQ args.
+     (FrontInsert, Input): Swapped arguments in all EXPECT_EQ().
+     (FrontInsert, ErrorChecking): Swapped arguments in all EXPECT_EQ().
+     (FrontInsert, Formatting): Swapped arguments in all EXPECT_EQ().
+     (FrontInsertN, Types): New test.
+     (FrontInsertN, Input): New test.
+     
+     * test/input.cpp: Swapped arguments in all EXPECT_EQ().
+     (Input, Range): Swapped arguments in all EXPECT_EQ().
+     (Input, Discarding): Swapped arguments in all EXPECT_EQ().
+     (Input, Formatting): Swapped arguments in all EXPECT_EQ().
+     
+     * test/insert.cpp
+     (Insert, Types): New test.
+     (Insert, Input): New test.
+     (Insert, ErrorChecking): New test.
+     (Insert, Formatting): New test.
+     (InsertN, Types): New test.
+     (InsertN, Input): New test.
+     
+     * test/iterators.cpp: Swapped arguments in all EXPECT_EQ().
+     (Iterators, Input): Test moved from input.cpp.
+     (Iterators, Output): Test moved from input.cpp.
+     (Iterators, DelimitedOutput): Test moved from output.cpp.
+     
+     * test/output.cpp: Swapped arguments in all EXPECT_EQ().
+     (Output, LvalueRange): Swapped arguments in all EXPECT_EQ().
+     (Output, RvalueRange): Swapped arguments in all EXPECT_EQ().
+     (Output, Formatting): Swapped arguments in all EXPECT_EQ().
+     (DelimitedOutput, LvalueRange): Swapped arguments in all EXPECT_EQ().
+     (DelimitedOutput, RvalueRange): Swapped arguments in all EXPECT_EQ().
+     (DelimitedOutput, Formatting): Swapped arguments in all EXPECT_EQ().
+     
+     * test/overwrite.cpp
+     (Overwrite, Types): New test.
+     (Overwrite, Input): New test.
+     (Overwrite, ErrorChecking): New test.
+     (Overwrite, Formatting): New test.
+     
+     * doc/specification.html: Added documentation for overwrite and insert.
+     
+     * doc/Ideas: New documentation file.
+
+
+
 2014-07-24  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
      
      * include/stream_range: Removed documentation in comments.

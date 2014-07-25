@@ -24,6 +24,14 @@
   </li>
   <li><a href="#input">Input operations</a>
     <ol>
+      <li><a href="#overwrite-intro">Class template <code class="lang-cpp">range_overwriter</code></a></li>
+      <li><a href="#overwrite-operations"><code class="lang-cpp">range_overwriter</code> operations</a>
+        <ol>
+          <li><a href="#overwrite-queries"><code class="lang-cpp">range_overwriter</code> queries</a></li>
+          <li><a href="#overwrite-extractors"><code class="lang-cpp">range_overwriter</code> extractors</a></li>
+          <li><a href="#overwrite-function"><code class="lang-cpp">overwrite</code></a></li>
+        </ol>
+      </li>
       <li><a href="#back_insert-intro">Class template <code class="lang-cpp">range_back_inserter</code></a></li>
       <li><a href="#back_insert-operations"><code class="lang-cpp">range_back_inserter</code> operations</a>
         <ol>
@@ -56,6 +64,7 @@
   <li><a href="#output">Output operations</a></li>
 </ol>
 </section>
+
 <section id="general">
 <h1>General</h1>
 
@@ -75,6 +84,19 @@
     <i>unspecified</i> stream_range<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">,</span> Delimiter<span class="delim">&amp;&amp;</span> delimiter<span class="delim">);</span>
   <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
     <i>unspecified</i> stream_range<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">);</span>
+  
+  <span class="comment">// Overwriting input operation</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span> <span class="keyword">class</span> range_overwriter<span class="delim">;</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_overwriter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_overwriter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;&amp;);</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_overwriter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> overwrite<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">);</span>
   
   <span class="comment">// Back inserting input operation</span>
   <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span> <span class="keyword">class</span> range_back_inserter<span class="delim">;</span>
@@ -139,6 +161,7 @@
 </p>
 </div>
 </section>
+
 <section id="requirements">
 <h1>Requirements</h1>
 
@@ -196,6 +219,7 @@ cin <span class="delim">&gt;&gt;</span> b<span class="delim">;</span>
   After the input operation, the range <abbr>I/O</abbr> function object’s <code class="lang-cpp">count<span class="delim">()</span></code> function returns the number of values that were successfully read from the input stream, parsed, and stored in the range in that operation.
 </p>
 </section>
+
 <section id="requirements-output">
 <h1>Output requirements</h1>
 
@@ -215,9 +239,93 @@ cin <span class="delim">&gt;&gt;</span> b<span class="delim">;</span>
   When the range is empty, an output operation on an ostream <code class="lang-cpp">os</code> should attempt an unformatted write of <code class="lang-cpp">os<span class="delim">.</span>width<span class="delim">()</span></code> copies of <code class="lang-cpp">os<span class="delim">.</span>fill<span class="delim">()</span></code> to <code class="lang-cpp">os</code>, then call <code class="lang-cpp">os<span class="delim">.</span>width<span class="delim">(</span><span class="literal int">0</span><span class="delim">)</span></code>.
 </p>
 </section>
+
 </section>
+
 <section id="input">
 <h1>Input operations</h1>
+
+<section id="overwrite-intro">
+<h1>Class template <code class="lang-cpp">range_overwriter</code></h1>
+
+<div class="synopsis">
+<pre><code class="lang-cpp"><span class="pp">#include &lt;iosfwd&gt;</span>
+
+<span class="keyword">namespace</span> std <span class="delim">{</span>
+  <span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+  <span class="keyword">class</span> range_overwriter <span class="delim">{</span>
+  <span class="keyword">public</span><span class="delim">:</span>
+    size_t count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span><span class="delim">;</span>
+    
+  <span class="keyword">private</span><span class="delim">:</span>
+    <span class="comment">// Construction is only possible via overwrite()</span>
+    range_overwriter<span class="delim">();</span> <span class="comment">// = delete;</span>
+  <span class="delim">};</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_overwriter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> range_overwriter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;&amp;);</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_overwriter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> overwrite<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">);</span>
+<span class="delim">}</span></code></pre>
+</div>
+</section>
+
+<section id="overwrite-operations">
+<h1><code class="lang-cpp">range_overwriter</code> operations</h1>
+
+<section id="overwrite-queries">
+<h1><code class="lang-cpp">range_overwriter</code> queries</h1>
+
+<div class="entry">
+<pre><code class="lang-cpp">size_t count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span><span class="delim">;</span></code></pre>
+<dl>
+  <dt>Returns:</dt>
+  <dd>The number of elements read in the last input operation, or <code class="lang-cpp"><span class="literal int">0</span></code> if there have been no read operations.</dd>
+</dl>
+</div>
+</section>
+
+<section id="overwrite-extractors">
+<h1><code class="lang-cpp">range_overwriter</code> extractors</h1>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+  basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+    <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span> is<span class="delim">,</span> range_overwriter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;</span> p<span class="delim">);</span>
+
+<span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+  basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+    <span class="keyword">operator</span><span class="delim">&gt;&gt;(</span>basic_istream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span> is<span class="delim">,</span> range_overwriter<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;&amp;</span> p<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Effects:</dt>
+  <dd>Acts as a <span class="concept">RangeInputOperation</span>, reading values of the range’s value type from <code class="lang-cpp">is</code> into the range referenced by <code class="lang-cpp">p</code>, overwriting its values, until either the range is completely overwritten or <code class="lang-cpp"><span class="keyword">bool</span><span class="delim">(</span>is<span class="delim">)</span></code> is <code class="lang-cpp"><span class="keyword">false</span></code>.</dd>
+  <dt>Returns:</dt>
+  <dd><code class="lang-cpp">is</code>.</dd>
+  <dt>Note:</dt>
+  <dd>Lvalue and rvalue overloads are required to handle the expected use cases, but both do the same thing.</dd>
+</dl>
+</div>
+</section>
+
+<section id="overwrite-function">
+<h1><code class="lang-cpp">overwrite</code></h1>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+  range_overwriter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> overwrite<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Returns:</dt>
+  <dd>A <code class="lang-cpp">range_overwriter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span></code> object that holds a reference to <code class="lang-cpp">range</code>.</dd>
+</dl>
+</div>
+</section>
+
+</section>
 
 <section id="back_insert-intro">
 <h1>Class template <code class="lang-cpp">range_back_inserter</code></h1>
@@ -341,6 +449,7 @@ cin <span class="delim">&gt;&gt;</span> b<span class="delim">;</span>
 </dl>
 </div>
 </section>
+
 </section>
 
 <section id="front_insert-intro">
@@ -465,6 +574,7 @@ cin <span class="delim">&gt;&gt;</span> b<span class="delim">;</span>
 </dl>
 </div>
 </section>
+
 </section>
 
 <section id="insert-intro">
@@ -598,9 +708,9 @@ cin <span class="delim">&gt;&gt;</span> b<span class="delim">;</span>
 <footer>
   <dl id="version-info">
     <dt>Version</dt>
-    <dd>1.3.0</dd>
+    <dd>1.4.0</dd>
     <dt>Date</dt>
-    <dd><time>2014-07-24</time></dd>
+    <dd><time>2014-07-25</time></dd>
   </dl>
   <p id="copyright">
     © Copyright 2014 Mark A. Gibbs. All rights reserved.

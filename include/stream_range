@@ -24,7 +24,7 @@
  * For more details, check https://github.com/DarkerStar/cpp-range-streaming
  * 
  * Version 1.4.0:
- *   * Added overwrite() and insert().
+ *   * Added overwrite() and insert(), and back_insert_n() and front_insert_n().
  * 
  * Version 1.3.0:
  *   * Added back_insert() and front_insert().

@@ -1,3 +1,11 @@
+Version 1.4.0 ----------------------------------------------------- [2014-07-25]
+
+*   Overwriting range input operation added.
+*   General inserting range input operation added.
+*   The two arguments in all tests using EXPECT_EQ() were swapped, to give
+    better output with Google Test.
+
+
 Version 1.3.0 ----------------------------------------------------- [2014-07-24]
 
 *   A documentation directory was added. It includes a specification of the

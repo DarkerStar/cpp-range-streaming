@@ -1,7 +1,7 @@
 C++ range streaming proposal
 ============================
 
-Version: 1.3.0
+Version: 1.4.0
 
 
 
@@ -107,35 +107,22 @@ reading or writing sequences to or from streams has a number of issues:
     you're getting a container full of junk, and you'll have no idea where
     things went wrong.
 
-This proposal suggests the addition of new manipulator-like functions for
-streaming ranges to or from streams. Reading a stream into a range is as simple
-as:
+This proposal suggests the addition of new manipulator-like functions (but
+*not* manipulators) for streaming ranges to or from streams.
+
+### Output
+
+Writing the contents of a range `r` to a stream is as simple as:
 
 ```C++
-// Overwrite each item in r with a value read from the stream, stopping
-// immediately when bool(in) is false.
-in >> std::stream_range(r);
-````
-
-Writing a range to a stream is just as easy:
-
-```C++
-// Write each item in r to the stream in order, stopping immediately when
-// bool(out) is false.
 out << std::stream_range(r);
 ```
 
-You can even use delimiters - *real* delimiters, which only appear *between*
-items - like this:
+If you want delimiters between each value written:
 
 ```C++
-// Write each item in r to the stream in order - writing delimiter between
-// each item - stopping immediately when bool(out) is false.
-out << std::stream_range(r, delimiter);
+out << std::stream_range(r, '\n');
 ```
-
-Even a C++ newbie, so long as ze is even vaguely familiar with stream I/O, can
-figure out what is going on here.
 
 And because this structure is natural for I/O, everything else becomes easier.
 Recall the code from N4066:
@@ -150,7 +137,7 @@ std::cout << ")"; // Prints (1, 4, 6) as desired
 With range streaming, that becomes:
 
 ```C++
-std::vector<int> v = {1, 4, 6};
+auto v = std::vector<int>{1, 4, 6};
 std::cout << '(' << std::stream_range(v, ", ") << ')'; // Prints (1, 4, 6)
 ```
 
@@ -163,54 +150,102 @@ std::cout << '(' << std::stream_range({ 1, 4, 6 }, ", ") << ')';
 std::cout << '(' << std::stream_range(std::vector<int>{ 1, 4, 6 }, ", ") << ')';
 ```
 
-The range used can be any type that works as the range in a range-`for`
-expression. The delimiter - which only applies to output - can be any type that
-has an `operator<<` defined for output streams (the delimiter does not apply to
-input streams). In all cases, no copies are made unless necessary (when the
-range or the delimiter is passed as an rvalue, it is necessary to keep a copy
-constructed by moving from the argument(s)).
-
-In the table below:
-
-*    `is` is an object of type `std::basic_istream<CharT, Traits>`
-*    `os` is an object of type `std::basic_ostream<CharT, Traits>`
-*    `lr` is a non-`const` lvalue reference to a range
-*    `cr` is a possibly `const` lvalue reference to a range
-*    `rr` is a non-`const` rvalue to a range range
-*    `cd` is a possibly `const` lvalue or a `const` rvalue of a type that has
-     `operator<<` defined for `std::basic_ostream<CharT, Traits>`.
-*    `rd` is a non-`const` rvalue of a type that has
-     `operator<<` defined for `std::basic_ostream<CharT, Traits>`.
-
-| Expression                   | Expression result  | Effects                                                                                                                                                          |
-| :--------------------------- | :----------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `is >> stream_range(lr)`     | reference to `is`  | Each element in `lr` is overwritten by a value read from `is`. Stops immediately when `bool(is)` is `false`.                                                     |
-| `is >> stream_range(rr)`     | reference to `is`  | Each element in `rr` is overwritten by a value read from `is`. Stops immediately when `bool(is)` is `false`.                                                     |
-| `os << stream_range(cr)`     | reference to `os`  | Each element in `cr` is written  to `os`. `cr` is not copied. Stops immediately when `bool(os)` is `false`.                                                      |
-| `os << stream_range(rr)`     | reference to `os`  | `rr` is moved and stored internally, then each element is written to `os`. Stops immediately when `bool(os)` is `false`.                                         |
-| `os << stream_range(cr, cd)` | reference to `os`  | Each element in `cr` is written to `os`, with `cd` written between each element. `cr` is not copied. Stops immediately when `bool(os)` is `false`.               |
-| `os << stream_range(cr, rd)` | reference to `os`  | Each element in `cr` is written to `os`, with `rd` written between each element. `cr` is not copied. Stops immediately when `bool(os)` is `false`.               |
-| `os << stream_range(rr, cd)` | reference to `os`  | `rr` is moved and stored internally, then each element is written to `os`, with `cd` written between each element. Stops immediately when `bool(os)` is `false`. |
-| `os << stream_range(rr, rd)` | reference to `os`  | `rr` is moved and stored internally, then each element is written to `os`, with `rd` written between each element. Stops immediately when `bool(os)` is `false`. |
-
-This proposal focuses on ranges supplied as is, rather than the "traditional"
-C++ way: as a pair of iterators. The intention is that if you *do* wish to use
-a pair of iterators, you can do this (assuming something like N3350 gets
-accepted):
+Unlike with the copy/stream-iterator model, stream errors are detected and
+handled properly. The stream's conversion to `bool` is checked after each write
+(attempt), and if it is `false`, the function stops attemping to write and
+returns immediately. You can query the number of elements that were written
+with the `count()` function:
 
 ```C++
-os << std::stream_range(std::make_range(begin, end));
-os << std::stream_range(std::make_range(begin, end), delimiter);
+auto p = std::stream_range(r);
+out << r;
+std::cout << p.count() << " items were written of " << r.size() << " in the range.";
 ```
 
-However, for completeness, I have also included the following forms:
+Also unlike with the copy/stream-iterator model, formatting is handled correctly.
+With the following code:
 
 ```C++
-os << std::stream_iterator_range(begin, end);
-os << std::stream_iterator_range(begin, end, delimiter);
+std::cout.fill('_');
+std::cout.setf(std::ios_base::hex, std::ios_base::basefield);
+
+std::cout << 'x' << std::setw(5) << std::stream_range(r, '|') << 'x';
 ```
 
-Which are equivalent to what is shown above.
+Then the output will be (dependent on the content of `r`):
+
+```
+// r = {} (r is empty)
+x_____x
+// r = { 25 }
+x___19x
+// r = { 6, 24, 151 }
+x____6|___18|___97x
+```
+
+### Input
+
+Input comes in 4 different forms:
+
+*   Overwriting.
+*   Back inserting.
+*   Front inserting.
+*   General inserting.
+
+The latter three mimic the behaviour of the existing `back_insert_iterator`,
+`front_insert_iterator`, and  `insert_iterator`, respectively.
+
+The following reads 4 `int` values from `std::cin`, overwriting the contents
+of `r`:
+
+```C++
+auto r = std::array<int, 4>{};
+std::cin >> std::overwrite(r);
+```
+
+The following code reads double values from `infile` until `EOF` or a parse
+error, and uses `push_back()` to add the values to `r`:
+
+```C++
+auto r = std::deque<double>{};
+std::cin >> std::back_insert(r);
+```
+
+If you wish to use `push_front()` instead, just replace `back_insert()` with
+`front_insert()`:
+
+```C++
+auto r = std::deque<double>{};
+std::cin >> std::front_insert(r);
+```
+
+If you wish to insert into any place in `r`, use `insert()` with an iterator to
+the spot to insert before:
+
+```C++
+auto r = std::vector<int>{ 0, 1 };
+std::cin >> std::insert(r, std::next(std::begin(r), 1));
+```
+
+Error checking works, too:
+
+```C++
+auto r = std::array<int, 100>{};
+auto p = std::overwrite(r);
+if (!(std::cin >> p))
+  std::cerr << "Error: only " << p.count() << " items were read successfully.";
+```
+
+Formatting also works:
+
+```C++
+auto iss = std::istringstream{"abcdef"};
+auto r = std::vector<std::string>{};
+iss >> std::setw(2) >> std::back_insert(r);
+// r is { "ab", "cd", "ef" }
+```
+
+For more details see the `doc` directory.
 
 
 
@@ -227,58 +262,7 @@ For more details, please see the file called “INSTALL”.
 Possible future directions
 --------------------------
 
-`std::stream_range` works for input - for a range with `N` elements, it will
-(attempt) to read `N` items from the input stream. That means you must know
-in advance how many items there are in the input source. Unfortunately, it
-also means that if there is a failure before all `N` elements are read, you
-don't know which elements in the range were successfully read.
-
-For more practical input situations, the following additional range streaming
-functions might be handy:
-
-```C++
-std::stream_range_back_insert(Range&&)
-std::stream_range_front_insert(Range&&)
-std::stream_range_insert(Range&&, Iterator)
-```
-
-The basic `std::stream_range(Range&&)` as applied to input is essentially:
-
-```C++
-std::copy_n(std::istream_iterator<T>{in}, std::size(r), std::begin(r))
-```
-
-except that it will stop immediately whenever `bool(in)` is false. By analogy,
-these other three functions, in turn, would be:
-
-```C++
-std::copy(std::istream_iterator<T>{in}, std::istream_iterator<T>{}, std::back_inserter(r))
-std::copy(std::istream_iterator<T>{in}, std::istream_iterator<T>{}, std::front_inserter(r))
-std::copy(std::istream_iterator<T>{in}, std::istream_iterator<T>{}, std::inserter(r, r.begin()))
-```
-
-Another handy extension might be to have these functions also take an
-optional size argument, allowing them to read up to that many items, stopping
-early if the stream goes into a bad state:
-
-```C++
-std::stream_range_back_insert(Range&&, Size)
-std::stream_range_front_insert(Range&&, Size)
-std::stream_range_insert(Range&&, Iterator, Size)
-```
-
-These functions would essentially be:
-
-```C++
-std::copy_n(std::istream_iterator<T>{in}, n, std::back_inserter(r))
-std::copy_n(std::istream_iterator<T>{in}, n, std::front_inserter(r))
-std::copy_n(std::istream_iterator<T>{in}, n, std::inserter(r, r.begin()))
-```
-
-except they would stop early if the input stream goes into a bad state.
-
-These functions may be added in a future version of this library, once some
-questions have been addressed.
+See `doc/Ideas` for some ideas being considered.
 
 
 

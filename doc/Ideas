@@ -10,3 +10,6 @@ Unsorted ideas for improving the proposal:
 
 *   Rename range_*inserter to range_*insert_extractor or
     range_*inserting_extractor
+
+*   A discard<T>(n) function that reads and parses up to n values of type T,
+    but just discards them.
