@@ -8,3 +8,5 @@ Unsorted ideas for improving the proposal:
                size_t n = numeric_limits<size_t>::max(),
                RangeValueType v = RangeValueType{});
 
+*   Rename range_*inserter to range_*insert_extractor or
+    range_*inserting_extractor
