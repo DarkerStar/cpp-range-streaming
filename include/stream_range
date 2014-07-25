@@ -14,7 +14,7 @@
  */
 
 // Proposed range streaming facilities.
-// Version: 1.3.0
+// Version: 1.4.0
 
 /* 
  * This C++ header file implements a proposed extension to the C++ standard
@@ -22,6 +22,9 @@
  * without requiring the use of the algorithms library.
  * 
  * For more details, check https://github.com/DarkerStar/cpp-range-streaming
+ * 
+ * Version 1.4.0:
+ *   * Added overwrite() and insert().
  * 
  * Version 1.3.0:
  *   * Added back_insert() and front_insert().
@@ -39,7 +42,7 @@
 #define STD_STREAM_RANGE_
 
 #include <iosfwd>
-#include <iterator> // Needed for iterator_traits
+#include <iterator> // Needed for iterator_traits and begin()
 #include <utility>
 
 namespace std {
@@ -56,6 +59,14 @@ template <typename Range>
 using RangeValueType = typename iterator_traits<RangeIterator<Range>>::value_type;
 
 } // namespace stream_range_detail
+
+/*# Forward declarations for overwrite() #####################################*/
+
+template <typename Range>
+class range_overwriter;
+
+template <typename Range>
+auto overwrite(Range& r) -> range_overwriter<Range>;
 
 /*# Forward declarations for back_insert() ###################################*/
 
@@ -305,6 +316,114 @@ auto stream_iterator_range(OutputIterator b, OutputIterator e, Delim&& d) ->
   stream_range_detail::stream_range_delimited_proxy<stream_range_detail::iterator_range<OutputIterator>, Delim>
 {
   return { stream_range_detail::make_iterator_range(b, e), forward<Delim>(d) };
+}
+
+/*# Implementations for overwrite() ##########################################*/
+
+/* 
+ * This is the helper class for overwrite().
+ * 
+ * overwrite() returns an object of this type, which holds a reference to the
+ * range that the input will be overwritten.
+ * 
+ * This type also holds a count of the number of elements successfully read in
+ * the last read operation. Initially it is zero, and it is reset on each read
+ * operation. It can be retrieved with the count() member function.
+ * 
+ * This type is non-copyable, but it is moveable. The only way to create one is
+ * via overwrite().
+ */
+template <typename Range>
+class range_overwriter
+{
+public:
+  // Make movable.
+  range_overwriter(range_overwriter&&) = default;
+  auto operator=(range_overwriter&&) -> range_overwriter& = default;
+  
+  // Count function returns the count from the last input.
+  auto count() const noexcept -> size_t { return count_; }
+  
+private:
+  // Reference to the range, obviously.
+  Range& range_;
+  
+  // The number of elements read in the last read operation.
+  size_t count_ = 0;
+  
+  range_overwriter(Range& r) :
+    range_{r}
+  {}
+  
+  // Remove default constructor.
+  range_overwriter() = delete;
+  
+  // Make non-copyable.
+  range_overwriter(range_overwriter const&) = delete;
+  auto operator=(range_overwriter const&) -> range_overwriter& = delete;
+  
+  // Friend declarations for extraction operators. Note that both lvalue and
+  // rvalue versions are needed.
+  template <typename CharT, typename Traits, typename Range2>
+  friend auto operator>>(basic_istream<CharT, Traits>& in, range_overwriter<Range2>& rbi) ->
+    basic_istream<CharT, Traits>&;
+  
+  template <typename CharT, typename Traits, typename Range2>
+  friend auto operator>>(basic_istream<CharT, Traits>& in, range_overwriter<Range2>&& rbi) ->
+    basic_istream<CharT, Traits>&;
+  
+  // Friend declarations for overwrite().
+  friend auto overwrite<Range>(Range&) -> range_overwriter<Range>;
+};
+
+/* 
+ * These are the extraction operators for range_overwriter. It is necessary
+ * to have both an lvalue and and rvalue version, because overwrite() may be
+ * used in two ways - like this:
+ *   in >> overwrite(r);
+ * or like this:
+ *   auto p = overwrite(r);
+ *   in >> p;
+ *   // check p.count() for the number of elements read.
+ */
+template <typename CharT, typename Traits, typename Range>
+auto operator>>(basic_istream<CharT, Traits>& in, range_overwriter<Range>& ro) ->
+  basic_istream<CharT, Traits>&
+{
+  ro.count_ = 0;
+  
+  auto const formatting = stream_range_detail::stream_formatting_saver<CharT, Traits>{in};
+  
+  for (auto& i : ro.range_)
+  {
+    formatting.restore();
+    
+    if (!(in >> i))
+      break;
+    
+    ++ro.count_;
+  }
+  
+  in.width(0);
+  
+  return in;
+}
+
+template <typename CharT, typename Traits, typename Range>
+auto operator>>(basic_istream<CharT, Traits>& in, range_overwriter<Range>&& rbi) ->
+  basic_istream<CharT, Traits>&
+{
+  return in >> rbi;
+}
+
+/* 
+ * The overwrite() function.
+ */
+
+template <typename Range>
+auto overwrite(Range& r) -> range_overwriter<Range>
+{
+  return {r};
 }
 
 /*# Implementations for back_insert() ########################################*/

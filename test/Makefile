@@ -14,6 +14,7 @@
 # The test objects - this is the only part that should change from time to time.
 test_obj := input.o \
             output.o \
+            overwrite.o \
             back_insert.o \
             front_insert.o \
             insert.o \
@@ -45,7 +46,7 @@ all : stream_range_test
 .PHONY : all
 
 # Pretty standard build command.
-stream_range_test : main.o $(test_obj) $(gtest_obj)
+stream_range_test : $(gtest_obj) main.o $(test_obj)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 # Dependencies. No need to muck around with automatic dependencies.
