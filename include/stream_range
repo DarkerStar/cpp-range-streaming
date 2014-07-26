@@ -410,10 +410,10 @@ auto operator>>(basic_istream<CharT, Traits>& in, range_overwriter<Range>& ro) -
 }
 
 template <typename CharT, typename Traits, typename Range>
-auto operator>>(basic_istream<CharT, Traits>& in, range_overwriter<Range>&& rbi) ->
+auto operator>>(basic_istream<CharT, Traits>& in, range_overwriter<Range>&& ro) ->
   basic_istream<CharT, Traits>&
 {
-  return in >> rbi;
+  return in >> ro;
 }
 
 /* 

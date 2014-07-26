@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+	<meta charset="utf-8"/>
+	
+	<title>Reference</title>
+	
+	<link rel="stylesheet" href="style/style.css"/>
+	<link rel="stylesheet" href="style/reference.css"/>
+	<link rel="stylesheet" href="style/code.css"/>
+</head>
+<body>
+<main>
+<section id="contents">
+<h1>Contents</h1>
+
+<ol class="toc">
+  <li><a href="#intro">Introduction</a></li>
+  <li><a href="#output">Output</a></li>
+  <li><a href="#input">Input</a></li>
+</ol>
+</section>
+<section id="intro">
+<h1>Introduction</h1>
+
+<p>
+  C++11 introduced the ‘range-<code class="lang-cpp"><span class="keyword">for</span></code>’ construct, which was the first step toward making ranges first-class citizens in the language.
+  The concept is still being developed, but for now we can say that a range is anything that has <code class="lang-cpp">begin<span class="delim">()</span></code> and <code class="lang-cpp">end<span class="delim">()</span></code> member functions, or that works with <code class="lang-cpp">begin<span class="delim">()</span></code> and <code class="lang-cpp">end<span class="delim">()</span></code> free functions – either <code class="lang-cpp">std<span class="delim">::</span>begin<span class="delim">()</span></code>/<code class="lang-cpp">std<span class="delim">::</span>begin<span class="delim">()</span></code>, or <code class="lang-cpp">begin<span class="delim">()</span></code>/<code class="lang-cpp">end<span class="delim">()</span></code> as found by <abbr title="argument-dependent lookup">ADL</abbr> – that in either case return a type that satisfies the Iterator concept, where the return value from <code class="lang-cpp">begin<span class="delim">()</span></code> references the beginning of a sequence and the return value from <code class="lang-cpp">end<span class="delim">()</span></code> references one-past-the end of the same sequence.
+  That’s a mouthful, but in brief you can say:
+</p>
+<div class="note">
+  <p>
+    If it works with range-<code class="lang-cpp"><span class="keyword">for</span></code>, it’s a range.
+  </p>
+</div>
+<p>
+  It is possible that future standards will include a whole new algorithms library that works with ranges rather than iterator pairs.
+  That would be neat, because it would mean that verbose function calls like these:
+</p>
+<pre><code class="lang-cpp"><span class="keyword">using</span> std<span class="delim">::</span>begin<span class="delim">;</span>
+<span class="keyword">using</span> std<span class="delim">::</span>end<span class="delim">;</span>
+
+std<span class="delim">::</span>sort<span class="delim">(</span>begin<span class="delim">(</span>r<span class="delim">),</span> end<span class="delim">(</span>r<span class="delim">));</span>
+std<span class="delim">::</span>set_difference<span class="delim">(</span>begin<span class="delim">(</span>a<span class="delim">),</span> end<span class="delim">(</span>a<span class="delim">),</span> begin<span class="delim">(</span>b<span class="delim">),</span> end<span class="delim">(</span>b<span class="delim">),</span> std<span class="delim">::</span>back_inserter<span class="delim">(</span>c<span class="delim">));</span>
+</code></pre>
+<p>
+  can be simplified to this:
+</p>
+<pre><code class="lang-cpp">std<span class="delim">::</span>sort<span class="delim">(</span>r<span class="delim">);</span>
+std<span class="delim">::</span>set_difference<span class="delim">(</span>a<span class="delim">,</span> b<span class="delim">,</span> std<span class="delim">::</span>back_inserter<span class="delim">(</span>c<span class="delim">));</span>
+</code></pre>
+<p>
+  which has the additional benefit of eliminating the possibility of mixing up iterators to different ranges.
+</p>
+<p>
+  Whether or not that happens, the range concept is still a very nice one to work with, and one that we already tend to use.
+</p>
+<p>
+  Unfortunately, C++ has never had a natural way to use ranges – even ranges defined by a pair of iterators – with IOStreams.
+  The best the standard library has had to offer is stream iterators, most commonly used with the <code class="lang-cpp">std<span class="delim">::</span>copy<span class="delim">()</span></code> algorithm, which looks like this:
+</p>
+<pre><code class="lang-cpp"><span class="comment">// Output</span>
+std<span class="delim">::</span>copy<span class="delim">(</span>begin<span class="delim">(</span>r<span class="delim">),</span> end<span class="delim">(</span>r<span class="delim">),</span> std<span class="delim">::</span>ostream_iterator<span class="delim">&lt;</span><span class="keyword">double</span><span class="delim">&gt;{</span>out<span class="delim">,</span> <span class="literal string">"\n"</span><span class="delim">});</span>
+
+<span class="comment">// Input - note: if you don't use braces, watch out for the most vexing parse!</span>
+std<span class="delim">::</span>copy<span class="delim">(</span>std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span><span class="keyword">double</span><span class="delim">&gt;{</span>in<span class="delim">},</span> std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span><span class="keyword">double</span><span class="delim">&gt;{},</span> std<span class="delim">::</span>back_inserter<span class="delim">(</span>c<span class="delim">));</span>
+</code></pre>
+<p>
+  Stream iterators have the neat ability to be plugged into any algorithm that takes input and output iterators, so you can do some really cool things like read values from two different files, add each pair, and output the results to a third file in one statement:
+</p>
+<pre><code class="lang-cpp">std<span class="delim">::</span>transform<span class="delim">(</span>std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span><span class="keyword">int</span><span class="delim">&gt;{</span>in1<span class="delim">},</span> std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span><span class="keyword">int</span><span class="delim">&gt;{},</span>
+               std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span><span class="keyword">int</span><span class="delim">&gt;{</span>in2<span class="delim">},</span> std<span class="delim">::</span>ostream_iterator<span class="delim">&lt;</span><span class="keyword">int</span><span class="delim">&gt;{</span>out<span class="delim">,</span> <span class="literal string">"\n"</span><span class="delim">},</span>
+               std<span class="delim">::</span>plus<span class="delim">&lt;</span><span class="keyword">int</span><span class="delim">&gt;{});</span></code></pre>
+<p>
+  Using stream iterators with algorithms is a little verbose and clunky.
+  But the real problem is that there is no way to detect stream errors.
+  In the previous example, if reading from one of the two files (particularly <code class="lang-cpp">in2</code>) fails at some point – either because of a malformed entry, premature end-of-file, or an I/O error – the algorithm will continue merrily pumping garbage values into the output file... and you will have no idea that something went wrong, let alone where.
+</p>
+<p>
+  This proposal is about a new library that will not only fix those shortcomings, it will make reading and writing ranges a breeze.
+</p>
+</section>
+<section id="output">
+<h1>Output</h1>
+
+<p>
+  TBD
+</p>
+</section>
+<section id="input">
+<h1>Input</h1>
+
+<p>
+  The standard way input works in C++ is that you create a variable of the type you wish to read, then use the extraction operator (<code class="lang-cpp"><span class="delim">&gt;&gt;</span></code>) to read it, like this:
+</p>
+<pre><code class="lang-cpp"><span class="keyword">auto</span> v <span class="delim">=</span> <span class="keyword">double</span><span class="delim">{};</span>
+in <span class="delim">&gt;&gt;</span> v<span class="delim">;</span></code></pre>
+<p>
+  The proposal uses the same paradigm.
+</p>
+<pre><code class="lang-cpp"><span class="keyword">auto</span> v <span class="delim">=</span> std<span class="delim">::</span>vector<span class="delim">&lt;</span><span class="keyword">double</span><span class="delim">&gt;{};</span>
+in <span class="delim">&gt;&gt;</span> <i>function</i><span class="delim">(</span>v<span class="delim">);</span></code></pre>
+<p>
+  Where <var>function</var> is one of the range input functions (described below).
+</p>
+<p>
+  Whichever function is used, the basic pattern is the same:
+</p>
+<ol>
+  <li>
+    At the start of reading, the internal counter is set to zero, and the initial formatting state (flags, width, fill character, and precision) of the stream is saved.
+  </li>
+  <li>
+    A buffer variable <code class="lang-cpp">v</code> of the range’s <code class="lang-cpp">value_type</code> is prepared (the details of this are described in the comments on non-default-constructable types).
+  </li>
+  <li>
+    The initial formatting state of the stream is restored.
+  </li>
+  <li>
+    An attempt is made to read and parse a value from <code class="lang-cpp">in</code>, and store it in <code class="lang-cpp">v</code> (using <code class="lang-cpp">in <span class="delim">&gt;&gt;</span> v</code>).
+    If this makes <code class="lang-cpp"><span class="keyword">bool</span><span class="delim">(</span>in<span class="delim">)</span></code> return <code class="lang-cpp"><span class="keyword">false</span></code> (either by a stream I/O error, or a parse error), go to 7.
+  </li>
+  <li>
+    The value in <code class="lang-cpp">v</code> is added to range in some way (dependent on the function), and the internal counter is increased.
+  </li>
+  <li>
+    If the number of values desired (as determined by the reading function, and it may be functionally infinite) has not yet been read, go to 3.
+  </li>
+  <li>
+    Set the stream width to zero.
+  </li>
+  <li>
+    Return a reference to <code class="lang-cpp">in</code>.
+  </li>
+</ol>
+<p>
+  The idea is that no matter which input function you use, the following code will work identically, with some assumptions (specifically, that the number of values wanted is the same as the number of values available in the input sequence), regardless of whether one, zero, or many values are read before the string:
+</p>
+<pre><code class="lang-cpp"><span class="keyword">auto</span> r <span class="delim">=</span> std<span class="delim">::</span>vector<span class="delim">&lt;</span><span class="keyword">double</span><span class="delim">&gt;{};</span>
+<span class="keyword">auto</span> s <span class="delim">=</span> std<span class="delim">::</span>string<span class="delim">{};</span>
+
+in <span class="delim">&gt;&gt;</span> <i>function</i><span class="delim">(</span>r<span class="delim">);</span>
+in<span class="delim">.</span>clear<span class="delim">();</span>
+in <span class="delim">&gt;&gt;</span> s<span class="delim">;</span></code></pre>
+<p>
+  (The <code class="lang-cpp">clear()</code> function is used because some input functions read until the stream’s fail state is set.)
+</p>
+<p>
+  Error checking is done simply by checking the stream’s state flags, as is natural for input.
+  In the event that a failure is detected, it is possible to determine the number of values that were successfully read by capturing the proxy object returned by an input function and checking its <code class="lang-cpp">count()</code> member function, like this:
+</p>
+<pre><code class="lang-cpp"><span class="keyword">auto</span> r <span class="delim">=</span> std<span class="delim">::</span>vector<span class="delim">&lt;</span><span class="keyword">double</span><span class="delim">&gt;{};</span>
+
+<span class="keyword">auto</span> p <span class="delim">=</span> <i>function</i><span class="delim">(</span>r<span class="delim">);</span>
+in <span class="delim">&gt;&gt;</span> p<span class="delim">;</span>
+
+std<span class="delim">::</span>cout <span class="delim">&lt;&lt;</span> p<span class="delim">.</span>count<span class="delim">()</span> <span class="delim">&lt;&lt;</span> <span class="literal string">" values were read."</span><span class="delim">;</span></code></pre>
+<div class="warn">
+  <p>
+    Because the proxy object keeps a reference to the range, the effect of using it after the range’s lifetime has expired is undefined behaviour.
+  </p>
+</div>
+<div class="query">
+  <p>
+    Should the proxy object also keep an iterator to the next spot in the range?
+    That is, the value that would be returned from <code class="lang-cpp">std<span class="delim">::</span>copy<span class="delim">()</span></code> if used in the canonical input way?
+  </p>
+</div>
+<p>
+  There are four different input functions provided by this proposal.
+  The operations they perform are:
+</p>
+<ul>
+  <li>
+    Overwriting the values in the range with values read from the input stream.
+  </li>
+  <li>
+    Pushing values read from the input stream onto the back of the range.
+  </li>
+  <li>
+    Pushing values read from the input stream onto the front of the range.
+  </li>
+  <li>
+    Inserting values read from the input stream into the range (at any arbitrary point).
+  </li>
+</ul>
+<p>
+  They look like this:
+</p>
+<pre><code class="lang-cpp">in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>overwrite<span class="delim">(</span>r<span class="delim">);</span>
+in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>back_insert<span class="delim">(</span>r<span class="delim">);</span>
+in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>front_insert<span class="delim">(</span>r<span class="delim">);</span>
+in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>insert<span class="delim">(</span>r<span class="delim">,</span> pos<span class="delim">);</span></code></pre>
+<p>
+  These four ways roughly map to the existing four ways you would use stream iterators and <code class="lang-cpp">std<span class="delim">::</span>copy<span class="delim">()</span></code> for input.
+  In order, they are analogous to:
+</p>
+<pre><code class="lang-cpp"><span class="comment">// assuming r is a range of type Range</span>
+
+std<span class="delim">::</span>copy_n<span class="delim">(</span>std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span>Range<span class="delim">::</span>value_type<span class="delim">&gt;{</span>in<span class="delim">},</span> r<span class="delim">.</span>size<span class="delim">(),</span> r<span class="delim">.</span>begin<span class="delim">());</span>
+std<span class="delim">::</span>copy<span class="delim">(</span>std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span>Range<span class="delim">::</span>value_type<span class="delim">&gt;{</span>in<span class="delim">},</span> std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span>Range<span class="delim">::</span>value_type<span class="delim">&gt;{},</span> std<span class="delim">::</span>back_inserter<span class="delim">(</span>r<span class="delim">));</span>
+std<span class="delim">::</span>copy<span class="delim">(</span>std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span>Range<span class="delim">::</span>value_type<span class="delim">&gt;{</span>in<span class="delim">},</span> std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span>Range<span class="delim">::</span>value_type<span class="delim">&gt;{},</span> std<span class="delim">::</span>front_inserter<span class="delim">(</span>r<span class="delim">));</span>
+std<span class="delim">::</span>copy<span class="delim">(</span>std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span>Range<span class="delim">::</span>value_type<span class="delim">&gt;{</span>in<span class="delim">},</span> std<span class="delim">::</span>istream_iterator<span class="delim">&lt;</span>Range<span class="delim">::</span>value_type<span class="delim">&gt;{},</span> std<span class="delim">::</span>inserter<span class="delim">(</span>r<span class="delim">,</span> pos<span class="delim">));</span></code></pre>
+<p>
+  but they are safer, easier to use, and have some neat extra features that make them useful in situations where the <code class="lang-cpp">std<span class="delim">::</span>copy<span class="delim">()</span></code> solution just won’t work.
+</p>
+<p>
+  The latter three operations are different from the overwrite operation, because overwrite has an existing set of values in the range to work with, while the others are creating new values.
+  This means the three ‘insert’ operations have a few more challenges to overcome, and therefore some features to help overcome those challenges.
+</p>
+<p>
+  First, each of the ‘insert’ operations has a related ‘insert n’ operation.
+  Regular ‘insert’ operations read until reading fails; the ‘insert n’ operations stop reading after the specified number of values have been read, even if more are available.
+  They look like this:
+</p>
+<pre><code class="lang-cpp">in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>back_insert_n<span class="delim">(</span>r<span class="delim">,</span> n<span class="delim">);</span>
+in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>front_insert_n<span class="delim">(</span>r<span class="delim">,</span> n<span class="delim">);</span>
+in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>insert_n<span class="delim">(</span>r<span class="delim">,</span> pos<span class="delim">,</span> n<span class="delim">);</span></code></pre>
+<p>
+  Finally, there is one more technical hurdle that the ‘insert’ functions have to handle.
+  In C++, input from a stream requires that you already have an object of the desired type.
+  In other words, the variable <code class="lang-cpp">v</code> in the code below has to exist before the input operation:
+</p>
+<pre><code class="lang-cpp">in <span class="delim">&gt;&gt;</span> v<span class="delim">;</span></code></pre>
+<p>
+  That means that the ‘insert’ functions have to create an instance of the range’s value type to use as a buffer for reading.
+  The question is: how?
+  The easy answer – and the one currently used by the family of ‘insert iterators’ (<code class="lang-cpp">std<span class="delim">::</span>back_insert_iterator</code>, <code class="lang-cpp">std<span class="delim">::</span>front_insert_iterator</code>, and <code class="lang-cpp">std<span class="delim">::</span>insert_iterator</code>) – is to simply default-construct an instance of the desired type.
+  That’s fine normally... but not so much for types that don’t have an accessible default constructor (or don’t have one at all).
+</p>
+<p>
+  To support those types, all of the ‘insert’ (and ‘insert n’) functions take an additional argument: an instance of the range’s value type.
+  This serves as the initial value used for the buffer.
+</p>
+<pre><code class="lang-cpp">in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>back_insert<span class="delim">(</span>r<span class="delim">,</span> v<span class="delim">);</span>
+in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>front_insert<span class="delim">(</span>r<span class="delim">,</span> v<span class="delim">);</span>
+in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>insert<span class="delim">(</span>r<span class="delim">,</span> pos<span class="delim">,</span> v<span class="delim">);</span>
+
+in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>back_insert_n<span class="delim">(</span>r<span class="delim">,</span> n<span class="delim">,</span> v<span class="delim">);</span>
+in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>front_insert_n<span class="delim">(</span>r<span class="delim">,</span> n<span class="delim">,</span> v<span class="delim">);</span>
+in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>insert_n<span class="delim">(</span>r<span class="delim">,</span> pos<span class="delim">,</span> n<span class="delim">,</span> v<span class="delim">);</span></code></pre>
+<p>
+  If <code class="lang-cpp">v</code> is a default-constructed value of the range’s <code class="lang-cpp">value_type</code>, each of the lines above is equivalent to the overload without <code class="lang-cpp">v</code>.
+</p>
+<div class="warn">
+  <p>
+    Do not assume the buffer variable will actually be set to the value given to the input function on each read.
+    It might be set to that value on the first read, but then it might be overwritten or moved-from before subsequent reads.
+  </p>
+</div>
+</section>
+</main>
+<footer>
+  <dl id="version-info">
+    <dt>Version</dt>
+    <dd>1.4.0</dd>
+    <dt>Date</dt>
+    <dd><time>2014-07-25</time></dd>
+  </dl>
+  <p>
+    For the latest version of the proposal, see <a href="https://github.com/DarkerStar/cpp-range-streaming">https://github.com/DarkerStar/cpp-range-streaming</a>.
+  </p>
+  <p id="copyright">
+    © Copyright 2014 Mark A. Gibbs. All rights reserved.
+  </p>
+</footer>
+</body>
+</html>
