@@ -216,6 +216,11 @@ std<span class="delim">::</span>copy<span class="delim">(</span>std<span class="
 <pre><code class="lang-cpp">in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>back_insert_n<span class="delim">(</span>r<span class="delim">,</span> n<span class="delim">);</span>
 in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>front_insert_n<span class="delim">(</span>r<span class="delim">,</span> n<span class="delim">);</span>
 in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>insert_n<span class="delim">(</span>r<span class="delim">,</span> pos<span class="delim">,</span> n<span class="delim">);</span></code></pre>
+<div class="query">
+  <p>
+    Should the ‘insert n’ functions be folded into the ‘insert’ functions as overloads, rather than as separate functions?
+  </p>
+</div>
 <p>
   Finally, there is one more technical hurdle that the ‘insert’ functions have to handle.
   In C++, input from a stream requires that you already have an object of the desired type.
@@ -248,6 +253,327 @@ in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>insert_n<
     It might be set to that value on the first read, but then it might be overwritten or moved-from before subsequent reads.
   </p>
 </div>
+<section id="input-reference">
+<h1>Reference</h1>
+
+<p>
+  Range input function reference:
+</p>
+<table class="function-reference">
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Arguments</th>
+      <th>Effects</th>
+      <th>Supports</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="lang-cpp">overwrite<span class="delim">(</span>r<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+        </dl>
+      </td>
+      <td>
+        <ul>
+          <li>Overwrites each element in <var>r</var> with successive values.</li>
+          <li>Stops when <var>r</var> is completely overwritten, or after a read failure.</li>
+        </ul>
+      </td>
+      <td>
+        <ul class="comma">
+          <li>C arrays of known bound</li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>array</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>vector</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>deque</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>forward_list</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>list</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>basic_string</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>valarray</code></li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">back_insert<span class="delim">(</span>r<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+        </dl>
+      </td>
+      <td>
+        <ul>
+          <li>Adds successive values to the end of <var>r</var> using <code class="lang-cpp">push_back<span class="delim">()</span></code>.</li>
+          <li>Stops after a read failure.</li>
+        </ul>
+      </td>
+      <td>
+        <ul class="comma">
+          <li><code class="lang-cpp">std<span class="delim">::</span>vector</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>deque</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>list</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>basic_string</code></li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">back_insert<span class="delim">(</span>r<span class="delim">,</span> v<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+          <dt><var>v</var></dt>
+          <dd>A instance of the <code class="lang-cpp">value_type</code> of <var>r</var></dd>
+        </dl>
+      </td>
+      <td>
+        Same as above.
+      </td>
+      <td>
+        Same as above.
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">back_insert_n<span class="delim">(</span>r<span class="delim">,</span> n<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+          <dt><var>n</var></dt>
+          <dd><code class="lang-cpp">size_t</code></dd>
+        </dl>
+      </td>
+      <td>
+        <ul>
+          <li>Adds successive values to the end of <var>r</var> using <code class="lang-cpp">push_back<span class="delim">()</span></code>.</li>
+          <li>Stops after <var>n</var> values are read, or after a read failure.</li>
+        </ul>
+      </td>
+      <td>
+        Same as above.
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">back_insert_n<span class="delim">(</span>r<span class="delim">,</span> n<span class="delim">,</span> v<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+          <dt><var>n</var></dt>
+          <dd><code class="lang-cpp">size_t</code></dd>
+          <dt><var>v</var></dt>
+          <dd>A instance of the <code class="lang-cpp">value_type</code> of <var>r</var></dd>
+        </dl>
+      </td>
+      <td>
+        Same as above.
+      </td>
+      <td>
+        Same as above.
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">front_insert<span class="delim">(</span>r<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+        </dl>
+      </td>
+      <td>
+        <ul>
+          <li>Adds successive values to the start of <var>r</var> using <code class="lang-cpp">push_front<span class="delim">()</span></code>.</li>
+          <li>Stops after a read failure.</li>
+        </ul>
+      </td>
+      <td>
+        <ul class="comma">
+          <li><code class="lang-cpp">std<span class="delim">::</span>deque</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>forward_list</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>list</code></li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">front_insert<span class="delim">(</span>r<span class="delim">,</span> v<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+          <dt><var>v</var></dt>
+          <dd>A instance of the <code class="lang-cpp">value_type</code> of <var>r</var></dd>
+        </dl>
+      </td>
+      <td>
+        Same as above.
+      </td>
+      <td>
+        Same as above.
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">front_insert_n<span class="delim">(</span>r<span class="delim">,</span> n<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+          <dt><var>n</var></dt>
+          <dd><code class="lang-cpp">size_t</code></dd>
+        </dl>
+      </td>
+      <td>
+        <ul>
+          <li>Adds successive values to the start of <var>r</var> using <code class="lang-cpp">push_front<span class="delim">()</span></code>.</li>
+          <li>Stops after <var>n</var> values are read, or after a read failure.</li>
+        </ul>
+      </td>
+      <td>
+        Same as above.
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">front_insert_n<span class="delim">(</span>r<span class="delim">,</span> n<span class="delim">,</span> v<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+          <dt><var>n</var></dt>
+          <dd><code class="lang-cpp">size_t</code></dd>
+          <dt><var>v</var></dt>
+          <dd>A instance of the <code class="lang-cpp">value_type</code> of <var>r</var></dd>
+        </dl>
+      </td>
+      <td>
+        Same as above.
+      </td>
+      <td>
+        Same as above.
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">insert<span class="delim">(</span>r<span class="delim">,</span> p<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+          <dt><var>p</var></dt>
+          <dd>Iterator for <var>r</var></dd>
+        </dl>
+      </td>
+      <td>
+        <ul>
+          <li>Adds successive values to <var>r</var> before the element referenced by <var>p</var> using <code class="lang-cpp">insert<span class="delim">()</span></code>.</li>
+          <li>Stops after a read failure.</li>
+        </ul>
+      </td>
+      <td>
+        <ul class="comma">
+          <li><code class="lang-cpp">std<span class="delim">::</span>vector</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>deque</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>list</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>basic_string</code></li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">insert<span class="delim">(</span>r<span class="delim">,</span> p<span class="delim">,</span> v<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+          <dt><var>p</var></dt>
+          <dd>Iterator for <var>r</var></dd>
+          <dt><var>v</var></dt>
+          <dd>A instance of the <code class="lang-cpp">value_type</code> of <var>r</var></dd>
+        </dl>
+      </td>
+      <td>
+        Same as above.
+      </td>
+      <td>
+        Same as above.
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">insert_n<span class="delim">(</span>r<span class="delim">,</span> p<span class="delim">,</span> n<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+          <dt><var>p</var></dt>
+          <dd>Iterator for <var>r</var></dd>
+          <dt><var>n</var></dt>
+          <dd><code class="lang-cpp">size_t</code></dd>
+        </dl>
+      </td>
+      <td>
+        <ul>
+          <li>Adds successive values to <var>r</var> before the element referenced by <var>p</var> using <code class="lang-cpp">insert<span class="delim">()</span></code>.</li>
+          <li>Stops after <var>n</var> values are read, or after a read failure.</li>
+        </ul>
+      </td>
+      <td>
+        Same as above.
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">insert_n<span class="delim">(</span>r<span class="delim">,</span> p<span class="delim">,</span> n<span class="delim">,</span> v<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd>Non-<code class="lang-cpp"><span class="keyword">const</span></code> range lvalue</dd>
+          <dt><var>p</var></dt>
+          <dd>Iterator for <var>r</var></dd>
+          <dt><var>n</var></dt>
+          <dd><code class="lang-cpp">size_t</code></dd>
+          <dt><var>v</var></dt>
+          <dd>A instance of the <code class="lang-cpp">value_type</code> of <var>r</var></dd>
+        </dl>
+      </td>
+      <td>
+        Same as above.
+      </td>
+      <td>
+        Same as above.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Every range input function returns a proxy object that references the range.
+  The proxy object cannot be default-constructed (it must be constructed by a range input function), and it satisfies the following concepts:
+</p>
+<ul>
+  <li><code><a href="http://en.cppreference.com/w/cpp/concept/MoveConstructible">MoveConstructible</a></code></li>
+  <li><code><a href="http://en.cppreference.com/w/cpp/concept/MoveAssignable">MoveAssignable</a></code></li>
+  <li><code><a href="http://en.cppreference.com/w/cpp/concept/Destructible">Destructible</a></code></li>
+</ul>
+<p>
+  The proxy object has the following member functions:
+</p>
+<table class="proxy-reference">
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Arguments</th>
+      <th>Returns</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="lang-cpp">count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span></code></td>
+      <td>―</td>
+      <td><code class="lang-cpp">size_t</code></td>
+      <td>The number of elements that were successfully read in the last input operation.</td>
+    </tr>
+  </tbody>
+</table>
+</section>
 </section>
 </main>
 <footer>

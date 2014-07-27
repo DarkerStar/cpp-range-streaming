@@ -13,4 +13,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* I/O function reference table */
+table.function-reference > tbody > tr > td:first-child {
+  white-space: nowrap;
+}
 
+table.function-reference > tbody > tr > td:nth-child(2) > dl {
+  margin: 0;
+}
+
+table.function-reference > tbody > tr > td:nth-child(2) > dl > dt {
+  float: left;
+  clear: both;
+}
+
+table.function-reference > tbody > tr > td:nth-child(2) > dl > dd {
+  margin: 0;
+  padding-left: 1.5em;
+}
+
+table.function-reference > tbody > tr > td:nth-child(3) > ul {
+  margin: 0;
+  padding-left: 1em;
+}
+
+table.function-reference > tbody > tr > td:nth-child(4) > ul {
+  margin: 0;
+}
+
+/* Proxy object reference table */
+table.proxy-reference > tbody > tr > td:first-child {
+  white-space: nowrap;
+}

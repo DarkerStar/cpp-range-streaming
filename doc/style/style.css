@@ -23,6 +23,8 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
+  max-width: 65em;
+  margin: 0 auto;
 }
 
 body > main {
@@ -98,4 +100,39 @@ div.query::before {
 pre {
   margin: 1em 2.5em;
   overflow: auto;
+}
+
+/* Table formatting */
+table {
+  width: 100%;
+}
+
+table > * > tr > * {
+  padding: 0.5em 1em;
+}
+
+table > thead > tr > * {
+  background: #ccc;
+}
+
+table > tbody > tr:nth-of-type(even) > * {
+  background: #e8e8e8;
+}
+
+/* List formatting */
+ul.comma {
+  list-style: none;
+  padding: 0;
+}
+
+ul.comma > li {
+  display: inline;
+}
+
+ul.comma > li::after {
+  content: ', ';
+}
+
+ul.comma > li:last-child::after {
+  content: '';
 }
