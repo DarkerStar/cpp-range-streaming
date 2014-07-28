@@ -125,6 +125,20 @@ auto insert_n(Range& r, stream_range_detail::RangeIterator<Range> i, size_t n, s
 template <typename Range>
 auto insert_n(Range& r, stream_range_detail::RangeIterator<Range> i, size_t n) -> range_inserter<Range>;
 
+/*# Forward declarations for write_all() #####################################*/
+
+template <typename Range>
+class range_writer;
+
+template <typename Range, typename Delimiter>
+class range_delimited_writer;
+
+template <typename Range>
+auto write_all(Range&& r) -> range_writer<Range&&>;
+
+template <typename Range, typename Delimiter>
+auto write_all(Range&& r, Delimiter&& d) -> range_delimited_writer<Range&&, Delimiter&&>;
+
 /* 
  * All of the monkeyworks necessary for range streaming is in this namespace.
  */
@@ -924,6 +938,218 @@ template <typename Range>
 auto insert_n(Range& r, stream_range_detail::RangeIterator<Range> i, size_t n) -> range_inserter<Range>
 {
   return insert_n(r, i, n, stream_range_detail::RangeValueType<Range>{});
+}
+
+/*# Implementations for write_all() ##########################################*/
+
+/* 
+ * This is the helper class for the non-delimited version of write_all().
+ * 
+ * write_all(), when called without a delimiter, returns an object of this
+ * type. Using it in an output expression will write all values in the range
+ * to the output stream.
+ * 
+ * Depending on whether the range was an lvalue or an rvalue, objects of this
+ * type will either hold a reference to the range or take ownership of it
+ * (via moving).
+ * 
+ * This type also holds a count of the number of elements successfully written
+ * in the last write operation. Initially it is zero, and it is reset on each
+ * write operation. It can be retrieved with the count() member function.
+ * 
+ * This type is non-copyable, but it is moveable. The only way to create one is
+ * via write_all().
+ */
+template <typename Range>
+class range_writer
+{
+public:
+  // Make movable.
+  range_writer(range_writer&&) = default;
+  auto operator=(range_writer&&) -> range_writer& = default;
+  
+  // Count function returns the count from the last input.
+  auto count() const noexcept -> size_t { return count_; }
+  
+private:
+  // The range to write - may be an lvalue reference or an (owning) rvalue
+  // reference.
+  Range range_;
+  
+  // The number of elements read in the last read operation.
+  mutable size_t count_ = 0;
+  
+  range_writer(Range r) :
+    range_{std::forward<Range>(r)}
+  {}
+  
+  // Remove default constructor.
+  range_writer() = delete;
+  
+  // Make non-copyable.
+  range_writer(range_writer const&) = delete;
+  auto operator=(range_writer const&) -> range_writer& = delete;
+  
+  // Friend declarations for extraction operators. Note that both lvalue and
+  // rvalue versions are needed.
+  template <typename CharT, typename Traits, typename Range2>
+  friend auto operator<<(basic_ostream<CharT, Traits>& in, range_writer<Range2> const& rbi) ->
+    basic_ostream<CharT, Traits>&;
+  
+  // Friend declarations for write_all().
+  friend auto write_all<Range>(Range) -> range_writer<Range>;
+};
+
+template <typename CharT, typename Traits, typename Range>
+auto operator<<(basic_ostream<CharT, Traits>& out, range_writer<Range> const& p) ->
+  basic_ostream<CharT, Traits>&
+{
+  p.count_ = 0;
+  
+  auto const formatting = stream_range_detail::stream_formatting_saver<CharT, Traits>{out};
+  
+  for (auto const& i : p.range_)
+  {
+    formatting.restore();
+    
+    if (!(out << i))
+      break;
+    
+    ++p.count_;
+  }
+  
+  if (!p.count_ && static_cast<bool>(out))
+  {
+    for (auto n = out.width(); n; --n)
+      out.put(out.fill());
+  }
+  
+  out.width(0);
+  
+  return out;
+}
+
+/* 
+ * This is the helper class for the delimited version of write_all().
+ * 
+ * write_all(), when called with a delimiter, returns an object of this
+ * type. Using it in an output expression will write all values in the range
+ * to the output stream, separated by the delimiter.
+ * 
+ * Depending on whether the range was an lvalue or an rvalue, objects of this
+ * type will either hold a reference to the range or take ownership of it
+ * (via moving).
+ * 
+ * This type also holds a count of the number of elements successfully written
+ * in the last write operation. Initially it is zero, and it is reset on each
+ * write operation. It can be retrieved with the count() member function.
+ * 
+ * This type is non-copyable, but it is moveable. The only way to create one is
+ * via write_all().
+ */
+template <typename Range, typename Delimiter>
+class range_delimited_writer
+{
+public:
+  // Make movable.
+  range_delimited_writer(range_delimited_writer&&) = default;
+  auto operator=(range_delimited_writer&&) -> range_delimited_writer& = default;
+  
+  // Count function returns the count from the last input.
+  auto count() const noexcept -> size_t { return count_; }
+  
+private:
+  // The range to write - may be an lvalue reference or an (owning) rvalue
+  // reference.
+  Range range_;
+  
+  // The delimiter - may be an lvalue reference or an (owning) rvalue
+  // reference.
+  Delimiter delimiter_;
+  
+  // The number of elements read in the last read operation.
+  mutable size_t count_ = 0;
+  
+  range_delimited_writer(Range r) :
+    range_{std::forward<Range>(r)}
+  {}
+  
+  // Remove default constructor.
+  range_delimited_writer() = delete;
+  
+  // Make non-copyable.
+  range_delimited_writer(range_delimited_writer const&) = delete;
+  auto operator=(range_delimited_writer const&) -> range_delimited_writer& = delete;
+  
+  // Friend declarations for extraction operators. Note that both lvalue and
+  // rvalue versions are needed.
+  template <typename CharT, typename Traits, typename Range2, typename Delimiter2>
+  friend auto operator<<(basic_ostream<CharT, Traits>& in, range_delimited_writer<Range2, Delimiter2> const& rbi) ->
+    basic_ostream<CharT, Traits>&;
+  
+  // Friend declarations for write_all().
+  friend auto write_all<Range, Delimiter>(Range, Delimiter) -> range_delimited_writer<Range, Delimiter>;
+};
+
+template <typename CharT, typename Traits, typename Range, typename Delimiter>
+auto operator<<(basic_ostream<CharT, Traits>& out, range_delimited_writer<Range, Delimiter> const& p) ->
+  basic_ostream<CharT, Traits>&
+{
+  p.count_ = 0;
+  
+  auto const formatting = stream_range_detail::stream_formatting_saver<CharT, Traits>{out};
+  
+  auto first = true;
+  for (auto const& i : p.range_)
+  {
+    if (!first)
+    {
+      if (!(out << p.delimiter_))
+        break;
+    }
+    
+    first = false;
+    
+    formatting.restore();
+    
+    if (!(out << i))
+      break;
+    
+    ++p.count_;
+  }
+  
+  if (!p.count_ && static_cast<bool>(out))
+  {
+    for (auto n = out.width(); n; --n)
+      out.put(out.fill());
+  }
+  
+  out.width(0);
+  
+  return out;
+}
+
+/* 
+ * The write_all() functions.
+ * 
+ * Both versions of these functions may either take an lvalue or an rvalue
+ * range - in the former case the returned object holds an lvalue reference
+ * to the range, in the latter it keeps a copy internally.
+ * 
+ * One overload allows you to pass a delimiter which gets printed between each
+ * element. The delimiter may also be taken by lvalue or rvalue, with the same
+ * consequences as for the range.
+ */
+template <typename Range>
+auto write_all(Range&& r) -> range_writer<Range&&>
+{
+  return { std::forward<Range>(r) };
+}
+
+template <typename Range, typename Delimiter>
+auto write_all(Range&& r, Delimiter&& d) -> range_delimited_writer<Range&&, Delimiter&&>
+{
+  return { std::forward<Range>(r), std::forward<Range>(r) };
 }
 
 } // namespace std
