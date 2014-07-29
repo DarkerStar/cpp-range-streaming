@@ -964,6 +964,10 @@ template <typename Range>
 class range_writer
 {
 public:
+  range_writer(Range&& r) :
+    range_{std::forward<Range>(r)}
+  {}
+  
   // Make movable.
   range_writer(range_writer&&) = default;
   auto operator=(range_writer&&) -> range_writer& = default;
@@ -979,10 +983,6 @@ private:
   // The number of elements read in the last read operation.
   mutable size_t count_ = 0;
   
-  range_writer(Range r) :
-    range_{std::forward<Range>(r)}
-  {}
-  
   // Remove default constructor.
   range_writer() = delete;
   
@@ -995,9 +995,6 @@ private:
   template <typename CharT, typename Traits, typename Range2>
   friend auto operator<<(basic_ostream<CharT, Traits>& in, range_writer<Range2> const& rbi) ->
     basic_ostream<CharT, Traits>&;
-  
-  // Friend declarations for write_all().
-  friend auto write_all<Range>(Range) -> range_writer<Range>;
 };
 
 template <typename CharT, typename Traits, typename Range>
@@ -1051,6 +1048,11 @@ template <typename Range, typename Delimiter>
 class range_delimited_writer
 {
 public:
+  range_delimited_writer(Range&& r, Delimiter&& d) :
+    range_{std::forward<Range>(r)},
+    delimiter_{std::forward<Delimiter>(d)}
+  {}
+  
   // Make movable.
   range_delimited_writer(range_delimited_writer&&) = default;
   auto operator=(range_delimited_writer&&) -> range_delimited_writer& = default;
@@ -1070,10 +1072,6 @@ private:
   // The number of elements read in the last read operation.
   mutable size_t count_ = 0;
   
-  range_delimited_writer(Range r) :
-    range_{std::forward<Range>(r)}
-  {}
-  
   // Remove default constructor.
   range_delimited_writer() = delete;
   
@@ -1086,9 +1084,6 @@ private:
   template <typename CharT, typename Traits, typename Range2, typename Delimiter2>
   friend auto operator<<(basic_ostream<CharT, Traits>& in, range_delimited_writer<Range2, Delimiter2> const& rbi) ->
     basic_ostream<CharT, Traits>&;
-  
-  // Friend declarations for write_all().
-  friend auto write_all<Range, Delimiter>(Range, Delimiter) -> range_delimited_writer<Range, Delimiter>;
 };
 
 template <typename CharT, typename Traits, typename Range, typename Delimiter>

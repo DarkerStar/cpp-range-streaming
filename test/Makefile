@@ -18,6 +18,7 @@ test_obj := input.o \
             back_insert.o \
             front_insert.o \
             insert.o \
+            write_all.o \
             iterators.o
 
 # The header being tested.
