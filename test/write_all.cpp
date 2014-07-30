@@ -198,9 +198,49 @@ TEST(WriteAll, ErrorChecking)
  * 
  * Whatever the formatting state at the beginning of the output of a streamed
  * range, it should be applied to every element in the range.
+ * An empty range should just print the fill character width times.
  */
 TEST(WriteAll, Formatting)
 {
-  // TBD
-  EXPECT_TRUE(false);
+  {
+    auto const r = std::forward_list<int>{};
+    
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss.width(4);
+    oss.fill('*');
+    
+    EXPECT_TRUE(oss << std::write_all(r));
+    EXPECT_EQ(0, oss.width());
+    EXPECT_EQ("****", oss.str());
+  }
+  {
+    auto const r = std::array<int, 5>{ 0x0287, 0x071A, 0x00E6, 0x001A, 0x029E };
+    
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss.width(7);
+    oss.fill('.');
+    oss.setf(std::ios_base::hex, std::ios_base::basefield);
+    oss.setf(std::ios_base::left, std::ios_base::adjustfield);
+    oss.setf(std::ios_base::uppercase);
+    oss.setf(std::ios_base::showbase);
+    
+    EXPECT_TRUE(oss << std::write_all(r));
+    EXPECT_EQ("0X287.." "0X71A.." "0XE6..." "0X1A..." "0X29E..", oss.str());
+  }
+  {
+    auto const r = std::array<double, 5>{ 1.0, -2.3, 6.66666, -0.12345, -1.2345 };
+    
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    oss.width(8);
+    oss.precision(3);
+    oss.fill('_');
+    oss.setf(std::ios_base::internal, std::ios_base::adjustfield);
+    oss.setf(std::ios_base::showpoint);
+    
+    EXPECT_TRUE(oss << std::write_all(r));
+    EXPECT_EQ("____1.00" "-___2.30" "____6.67" "-__0.123" "-___1.23", oss.str());
+  }
 }

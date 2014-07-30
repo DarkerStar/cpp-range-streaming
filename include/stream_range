@@ -1017,7 +1017,7 @@ auto operator<<(basic_ostream<CharT, Traits>& out, range_writer<Range> const& p)
   
   if (!p.count_ && static_cast<bool>(out))
   {
-    for (auto n = out.width(); n; --n)
+    for (auto n = out.width(); n && static_cast<bool>(out); --n)
       out.put(out.fill());
   }
   
@@ -1115,7 +1115,7 @@ auto operator<<(basic_ostream<CharT, Traits>& out, range_delimited_writer<Range,
   
   if (!p.count_ && static_cast<bool>(out))
   {
-    for (auto n = out.width(); n; --n)
+    for (auto n = out.width(); n && static_cast<bool>(out); --n)
       out.put(out.fill());
   }
   
