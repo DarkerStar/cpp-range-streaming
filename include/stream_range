@@ -1144,7 +1144,7 @@ auto write_all(Range&& r) -> range_writer<Range&&>
 template <typename Range, typename Delimiter>
 auto write_all(Range&& r, Delimiter&& d) -> range_delimited_writer<Range&&, Delimiter&&>
 {
-  return { std::forward<Range>(r), std::forward<Range>(r) };
+  return { std::forward<Range>(r), std::forward<Delimiter>(d) };
 }
 
 } // namespace std
