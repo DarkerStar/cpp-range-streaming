@@ -10,6 +10,7 @@ Unsorted ideas for improving the proposal:
 
 *   Rename range_*inserter to range_*insert_extractor or
     range_*inserting_extractor
+    ALTERNATIVE: make all returned types unspecified.
 
 *   A discard<T>(n) function that reads and parses up to n values of type T,
     but just discards them.

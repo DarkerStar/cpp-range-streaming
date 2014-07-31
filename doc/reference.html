@@ -16,8 +16,16 @@
 
 <ol class="toc">
   <li><a href="#intro">Introduction</a></li>
-  <li><a href="#output">Output</a></li>
-  <li><a href="#input">Input</a></li>
+  <li><a href="#input">Input</a>
+    <ol>
+      <li><a href="#input-reference">Reference</a></li>
+    </ol>
+  </li>
+  <li><a href="#output">Output</a>
+    <ol>
+      <li><a href="#input-reference">Reference</a></li>
+    </ol>
+  </li>
 </ol>
 </section>
 <section id="intro">
@@ -78,13 +86,6 @@ std<span class="delim">::</span>copy<span class="delim">(</span>std<span class="
 </p>
 <p>
   This proposal is about a new library that will not only fix those shortcomings, it will make reading and writing ranges a breeze.
-</p>
-</section>
-<section id="output">
-<h1>Output</h1>
-
-<p>
-  TBD
 </p>
 </section>
 <section id="input">
@@ -570,6 +571,168 @@ in <span class="delim">&gt;&gt;</span> std<span class="delim">::</span>insert_n<
       <td>―</td>
       <td><code class="lang-cpp">size_t</code></td>
       <td>The number of elements that were successfully read in the last input operation.</td>
+    </tr>
+  </tbody>
+</table>
+</section>
+</section>
+<section id="output">
+<h1>Output</h1>
+
+<p>
+  Output of ranges works like like the output of anything else:
+</p>
+<pre><code class="lang-cpp"><span class="keyword">auto</span> v <span class="delim">=</span> std<span class="delim">::</span>vector<span class="delim">&lt;</span><span class="keyword">double</span><span class="delim">&gt;{</span> <span class="literal int">1</span><span class="delim">,</span> <span class="literal int">2</span><span class="delim">,</span> <span class="literal int">3</span><span class="delim">,</span> <span class="literal int">4</span> <span class="delim">};</span>
+out <span class="delim">&lt;&lt;</span> std<span class="delim">::</span>write_all<span class="delim">(</span>v<span class="delim">);</span>
+<span class="comment">// Output: "1234"</span></code></pre>
+<p>
+  It is even possible to output rvalues:
+</p>
+<pre><code class="lang-cpp">out <span class="delim">&lt;&lt;</span> std<span class="delim">::</span>write_all<span class="delim">(</span>std<span class="delim">::</span>vector<span class="delim">&lt;</span><span class="keyword">double</span><span class="delim">&gt;{</span> <span class="literal int">1</span><span class="delim">,</span> <span class="literal int">2</span><span class="delim">,</span> <span class="literal int">3</span><span class="delim">,</span> <span class="literal int">4</span> <span class="delim">});</span>
+<span class="comment">// Output: "1234"</span></code></pre>
+<p>
+  <code class="lang-cpp">write_all<span class="delim">()</span></code> simply writes each value in the range to the output sequence in turn, ensuring that the formatting used to write the first element is used for all elements.
+  It is possible to add a delimiter that is printed between elements:
+</p>
+<pre><code class="lang-cpp">out <span class="delim">&lt;&lt;</span> std<span class="delim">::</span>write_all<span class="delim">(</span>std<span class="delim">::</span>vector<span class="delim">&lt;</span><span class="keyword">double</span><span class="delim">&gt;{</span> <span class="literal int">1</span><span class="delim">,</span> <span class="literal int">2</span><span class="delim">,</span> <span class="literal int">3</span><span class="delim">,</span> <span class="literal int">4</span> <span class="delim">},</span> <span class="literal char">','</span><span class="delim">);</span>
+<span class="comment">// Output: "1,2,3,4"</span></code></pre>
+<p>
+  Unlike with ostream iterators, the delimiter does not have to be a C string, allowing you to use real strings, or any type that can be streamed, and even function objects.
+</p>
+<p>
+  <code class="lang-cpp">write_all<span class="delim">()</span></code> is designed so that if the range contains only a single element, then the following two statements should produce identical results:
+</p>
+<pre><code class="lang-cpp">out <span class="delim">&lt;&lt;</span> std<span class="delim">::</span>write_all<span class="delim">(</span>v<span class="delim">);</span>
+<span class="comment">// If v has only one element, identical to:</span>
+out <span class="delim">&lt;&lt;</span> <span class="delim">*</span>std<span class="delim">::</span>begin<span class="delim">(</span>v<span class="delim">)</span> <span class="delim">&lt;&lt;</span> std<span class="delim">::</span>setw<span class="delim">(</span><span class="literal int">0</span><span class="delim">);</span></code></pre>
+<p>
+  (Note that <code class="lang-cpp">write_all<span class="delim">()</span></code> will always reset the stream’s width to zero before returning.)
+</p>
+<p>
+  If the range has more than one element, then each element should produce the same result as if it were the only element in a single element range (which means it should produce the same result as if it were used directly).
+  When the range is empty, the stream’s fill character is written as many times as the stream’s width.
+</p>
+<pre><code class="lang-cpp"><span class="keyword">void</span> test<span class="delim">(</span>std<span class="delim">::</span>vector<span class="delim">&lt;</span><span class="keyword">int</span><span class="delim">&gt;</span> <span class="keyword">const</span><span class="delim">&amp;</span> r<span class="delim">)</span>
+<span class="delim">{</span>
+  std<span class="delim">::</span>cout<span class="delim">.</span>fill<span class="delim">(</span><span class="literal char">'_'</span><span class="delim">);</span>
+  std<span class="delim">::</span>cout<span class="delim">.</span>width<span class="delim">(</span><span class="literal int">8</span><span class="delim">);</span>
+  
+  std<span class="delim">::</span>cout <span class="delim">&lt;&lt;</span> std<span class="delim">::</span>write_all<span class="delim">(</span>r<span class="delim">,</span> <span class="literal char">'|'</span><span class="delim">) &lt;&lt;</span> <span class="literal char">'\n'</span><span class="delim">;</span>
+<span class="delim">}</span>
+
+<span class="keyword">auto</span> v <span class="delim">=</span> std<span class="delim">::</span>vector<span class="delim">&lt;</span><span class="keyword">int</span><span class="delim">&gt;{};</span>
+test<span class="delim">(</span>v<span class="delim">);</span>
+<span class="comment">// "________"</span>
+
+v <span class="delim">=</span> <span class="delim">{</span> <span class="literal int">42</span> <span class="delim">};</span>
+test<span class="delim">(</span>v<span class="delim">);</span>
+<span class="comment">// "______42"</span>
+
+v <span class="delim">=</span> <span class="delim">{</span> <span class="literal int">42</span><span class="delim">,</span> <span class="literal int">57</span><span class="delim">,</span> <span class="literal int">69</span> <span class="delim">};</span>
+test<span class="delim">(</span>v<span class="delim">);</span>
+<span class="comment">// "______42|______57|______69"</span></code></pre>
+<p>
+  The delimiter, if any, is written after each element except the last (so if the range is empty or has only one element, it is not written at all), using whatever formatting exists after the element is written.
+</p>
+<p>
+  Error checking is the same as for input.
+  If there is an error while attempting to write a range, the stream’s conversion to <code class="lang-cpp"><span class="keyword">bool</span></code> will return <code class="lang-cpp"><span class="keyword">false</span></code>.
+  The proxy object returned from <code class="lang-cpp">write_all<span class="delim">()</span></code> has a <code class="lang-cpp">count<span class="delim">()</span></code> function that can be queried to see how many elements of the range were written.
+</p>
+<section id="output-reference">
+<h1>Reference</h1>
+
+<p>
+  Range output function reference:
+</p>
+<table class="function-reference">
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Arguments</th>
+      <th>Effects</th>
+      <th>Supports</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="lang-cpp">write_all<span class="delim">(</span>r<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd><code class="lang-cpp"><span class="keyword">const</span></code> lvalue reference or non-<code class="lang-cpp"><span class="keyword">const</span></code> rvalue reference to a range.</dd>
+        </dl>
+      </td>
+      <td>
+        <ul>
+          <li>Writes each element in <var>r</var> to the output stream successively.</li>
+          <li>Stops when <var>r</var> is completely written, or after a write failure.</li>
+        </ul>
+      </td>
+      <td>
+        <ul class="comma">
+          <li>C arrays of known bound</li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>array</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>vector</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>deque</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>forward_list</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>list</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>basic_string</code></li>
+          <li><code class="lang-cpp">std<span class="delim">::</span>valarray</code></li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><code class="lang-cpp">write_all<span class="delim">(</span>r<span class="delim">,</span> d<span class="delim">)</span></code></td>
+      <td>
+        <dl>
+          <dt><var>r</var></dt>
+          <dd><code class="lang-cpp"><span class="keyword">const</span></code> lvalue reference or non-<code class="lang-cpp"><span class="keyword">const</span></code> rvalue reference to a range.</dd>
+          <dt><var>d</var></dt>
+          <dd>An instance of a type that can be written to an output stream.</dd>
+        </dl>
+      </td>
+      <td>
+        <ul>
+          <li>Writes each element in <var>r</var> to the output stream successively.</li>
+          <li>The delimiter <var>d</var> is written after each value, except the last.</li>
+          <li>Stops when <var>r</var> is completely written, or after a write failure.</li>
+        </ul>
+      </td>
+      <td>
+        Same as above.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Every range output function returns a proxy object that references the range, or – in the case of rvalues – takes ownership of the range (by moving).
+  The proxy object cannot be default-constructed (it must be constructed by a range output function), and it satisfies the following concepts:
+</p>
+<ul>
+  <li><code><a href="http://en.cppreference.com/w/cpp/concept/MoveConstructible">MoveConstructible</a></code></li>
+  <li><code><a href="http://en.cppreference.com/w/cpp/concept/MoveAssignable">MoveAssignable</a></code></li>
+  <li><code><a href="http://en.cppreference.com/w/cpp/concept/Destructible">Destructible</a></code></li>
+</ul>
+<p>
+  The proxy object has the following member functions:
+</p>
+<table class="proxy-reference">
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>Arguments</th>
+      <th>Returns</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="lang-cpp">count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span></code></td>
+      <td>―</td>
+      <td><code class="lang-cpp">size_t</code></td>
+      <td>The number of elements that were successfully written in the last output operation.</td>
     </tr>
   </tbody>
 </table>

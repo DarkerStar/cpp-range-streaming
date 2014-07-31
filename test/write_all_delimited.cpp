@@ -86,6 +86,26 @@ public:
   auto operator=(noncopyable_nonmoveable_range&&) -> noncopyable_nonmoveable_range& = delete;
 };
 
+/* 
+ * A special type intended to be used as a delimiter. What makes this type
+ * special is that every time it is streamed out, its value increments. This is
+ * to demonstrate that delimiters need not be constant values.
+ */
+struct incrementing_integer_delimiter
+{
+  mutable unsigned i = 0u;
+};
+
+template <typename CharT, typename Traits>
+auto operator<<(std::basic_ostream<CharT, Traits>& out, incrementing_integer_delimiter const& iid) ->
+  std::basic_ostream<CharT, Traits>&
+{
+  out << iid.i;
+  ++iid.i;
+  
+  return out;
+}
+
 } // anonymous namespace
 
 /* Test: Verify the types associated with the delimited write_all() are
@@ -154,6 +174,15 @@ TEST(WriteAllDelim, LvalueRange)
     
     EXPECT_EQ("12.3, 0.34, 1e-20, -0.1", out.str());
   }
+  {
+    auto const r = std::array<char, 5>{ 'w', 'o', 'r', 'k', 's' };
+    
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    
+    EXPECT_TRUE(oss << std::write_all(r, incrementing_integer_delimiter{}));
+    EXPECT_EQ("w0o1r2k3s", oss.str());
+  }
 }
 
 /* Test: Output an rvalue range using write_all().
@@ -179,6 +208,13 @@ TEST(WriteAllDelim, RvalueRange)
     EXPECT_TRUE(out << std::write_all(noncopyable_range<double, 4>{12.3, .34, 1e-20, -.1}, 'x'));
     
     EXPECT_EQ("12.3x0.34x1e-20x-0.1", out.str());
+  }
+  {
+    std::ostringstream oss;
+    oss.imbue(std::locale::classic());
+    
+    EXPECT_TRUE(oss << std::write_all(std::array<char, 5>{ 'w', 'o', 'r', 'k', 's' }, incrementing_integer_delimiter{}));
+    EXPECT_EQ("w0o1r2k3s", oss.str());
   }
 }
 
