@@ -62,7 +62,25 @@
       </li>
     </ol>
   </li>
-  <li><a href="#output">Output operations</a></li>
+  <li><a href="#output">Output operations</a>
+    <ol>
+      <li><a href="#writer-intro">Class template <code class="lang-cpp">range_writer</code></a></li>
+      <li><a href="#writer-operations"><code class="lang-cpp">range_writer</code> operations</a>
+        <ol>
+          <li><a href="#writer-queries"><code class="lang-cpp">range_writer</code> queries</a></li>
+          <li><a href="#writer-extractors"><code class="lang-cpp">range_writer</code> inserters</a></li>
+        </ol>
+      </li>
+      <li><a href="#delimited_writer-intro">Class template <code class="lang-cpp">range_delimited_writer</code></a></li>
+      <li><a href="#delimited_writer-operations"><code class="lang-cpp">range_delimited_writer</code> operations</a>
+        <ol>
+          <li><a href="#delimited_writer-queries"><code class="lang-cpp">range_delimited_writer</code> queries</a></li>
+          <li><a href="#delimited_writer-extractors"><code class="lang-cpp">range_delimited_writer</code> extractors</a></li>
+        </ol>
+      </li>
+      <li><a href="#write_all-intro">Function template <code class="lang-cpp">write_all</code></a></li>
+    </ol>
+  </li>
 </ol>
 </section>
 
@@ -80,12 +98,6 @@
 <pre><code class="lang-cpp"><span class="pp">#include &lt;iosfwd&gt;</span>
 
 <span class="keyword">namespace</span> std <span class="delim">{</span>
-  <span class="comment">// Basic range I/O</span>
-  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> Delimiter<span class="delim">&gt;</span>
-    <i>unspecified</i> stream_range<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">,</span> Delimiter<span class="delim">&amp;&amp;</span> delimiter<span class="delim">);</span>
-  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
-    <i>unspecified</i> stream_range<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">);</span>
-  
   <span class="comment">// Overwriting input operation</span>
   <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span> <span class="keyword">class</span> range_overwriter<span class="delim">;</span>
   
@@ -158,6 +170,22 @@
     range_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> insert_n<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeIterator</i> pos<span class="delim">,</span> size_t count<span class="delim">,</span> <i>RangeValueType</i> v<span class="delim">);</span>
   <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
     range_inserter<span class="delim">&lt;</span>Range<span class="delim">&gt;</span> insert_n<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">,</span> <i>RangeIterator</i> pos<span class="delim">,</span> size_t count<span class="delim">);</span>
+  
+  <span class="comment">// Output operation</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span> <span class="keyword">class</span> range_writer<span class="delim">;</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> Delimiter<span class="delim">&gt;</span> <span class="keyword">class</span> delimited_range_writer<span class="delim">;</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&lt;&lt;(</span>basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> <span class="keyword">const</span> range_writer<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> Delimiter<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&lt;&lt;(</span>basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> <span class="keyword">const</span> delimited_range_writer<span class="delim">&lt;</span>Range<span class="delim">,</span> Delimiter<span class="delim">&gt;&amp;);</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_writer<span class="delim">&lt;</span>Range<span class="delim">&amp;&amp;&gt;</span> write_all<span class="delim">(</span>Range<span class="delim">&amp;</span> range<span class="delim">);</span>
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> Delimiter<span class="delim">&gt;</span>
+    range_writer<span class="delim">&lt;</span>Range<span class="delim">&amp;&amp;,</span> Delimiter<span class="delim">&amp;&amp;&gt;</span> write_all<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">,</span> Delimiter<span class="delim">&amp;&amp;</span> delim<span class="delim">);</span>
 <span class="delim">}</span></code></pre>
 </p>
 </div>
@@ -703,7 +731,157 @@ cin <span class="delim">&gt;&gt;</span> b<span class="delim">;</span>
 <section id="output">
 <h1>Output operations</h1>
 
-<p>TBD</p>
+<section id="writer-intro">
+<h1>Class template <code class="lang-cpp">range_writer</code></h1>
+
+<div class="synopsis">
+<pre><code class="lang-cpp"><span class="pp">#include &lt;iosfwd&gt;</span>
+
+<span class="keyword">namespace</span> std <span class="delim">{</span>
+  <span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+  <span class="keyword">class</span> range_writer <span class="delim">{</span>
+  <span class="keyword">public</span><span class="delim">:</span>
+    size_t count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span><span class="delim">;</span>
+    
+  <span class="keyword">private</span><span class="delim">:</span>
+    <span class="comment">// Construction is only possible via write_all()</span>
+    range_writer<span class="delim">();</span> <span class="comment">// = delete;</span>
+  <span class="delim">};</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&lt;&lt;(</span>basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> <span class="keyword">const</span> range_writer<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;);</span>
+<span class="delim">}</span></code></pre>
+</div>
+</section>
+
+<section id="writer-operations">
+<h1><code class="lang-cpp">range_writer</code> operations</h1>
+
+<section id="writer-queries">
+<h1><code class="lang-cpp">range_writer</code> queries</h1>
+
+<div class="entry">
+<pre><code class="lang-cpp">size_t count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span><span class="delim">;</span></code></pre>
+<dl>
+  <dt>Returns:</dt>
+  <dd>The number of elements written in the last output operation, or <code class="lang-cpp"><span class="literal int">0</span></code> if there have been no output operations.</dd>
+</dl>
+</div>
+</section>
+
+<section id="writer-inserters">
+<h1><code class="lang-cpp">range_writer</code> inserters</h1>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+  basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+    <span class="keyword">operator</span><span class="delim">&lt;&lt;(</span>basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span> os<span class="delim">,</span> <span class="keyword">const</span> range_writer<span class="delim">&lt;</span>Range<span class="delim">&gt;&amp;</span> p<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Effects:</dt>
+  <dd>Acts as a <span class="concept">RangeOutputOperation</span>, writing values of the range referenced by <code class="lang-cpp">p</code> to <code class="lang-cpp">os</code>, until either the range is completely written or <code class="lang-cpp"><span class="keyword">bool</span><span class="delim">(</span>os<span class="delim">)</span></code> is <code class="lang-cpp"><span class="keyword">false</span></code>.</dd>
+  <dt>Returns:</dt>
+  <dd><code class="lang-cpp">os</code>.</dd>
+</dl>
+</div>
+</section>
+
+</section>
+
+<section id="delimited_writer-intro">
+<h1>Class template <code class="lang-cpp">delimited_range_writer</code></h1>
+
+<div class="synopsis">
+<pre><code class="lang-cpp"><span class="pp">#include &lt;iosfwd&gt;</span>
+
+<span class="keyword">namespace</span> std <span class="delim">{</span>
+  <span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> Delimiter<span class="delim">&gt;</span>
+  <span class="keyword">class</span> delimited_range_writer <span class="delim">{</span>
+  <span class="keyword">public</span><span class="delim">:</span>
+    size_t count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span><span class="delim">;</span>
+    
+  <span class="keyword">private</span><span class="delim">:</span>
+    <span class="comment">// Construction is only possible via write_all()</span>
+    delimited_range_writer<span class="delim">();</span> <span class="comment">// = delete;</span>
+  <span class="delim">};</span>
+  
+  <span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> Delimiter<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+    basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+      <span class="keyword">operator</span><span class="delim">&lt;&lt;(</span>basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;,</span> <span class="keyword">const</span> delimited_range_writer<span class="delim">&lt;</span>Range<span class="delim">,</span> Delimiter<span class="delim">&gt;&amp;);</span>
+<span class="delim">}</span></code></pre>
+</div>
+</section>
+
+<section id="delimited_writer-operations">
+<h1><code class="lang-cpp">delimited_range_writer</code> operations</h1>
+
+<section id="delimited_writer-queries">
+<h1><code class="lang-cpp">delimited_range_writer</code> queries</h1>
+
+<div class="entry">
+<pre><code class="lang-cpp">size_t count<span class="delim">()</span> <span class="keyword">const</span> <span class="keyword">noexcept</span><span class="delim">;</span></code></pre>
+<dl>
+  <dt>Returns:</dt>
+  <dd>The number of elements written in the last output operation, or <code class="lang-cpp"><span class="literal int">0</span></code> if there have been no output operations.</dd>
+</dl>
+</div>
+</section>
+
+<section id="delimited_writer-inserters">
+<h1><code class="lang-cpp">delimited_range_writer</code> inserters</h1>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span><span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> Delimiter<span class="delim">,</span> <span class="keyword">class</span> charT<span class="delim">,</span> <span class="keyword">class</span> traits<span class="delim">&gt;</span>
+  basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span>
+    <span class="keyword">operator</span><span class="delim">&lt;&lt;(</span>basic_ostream<span class="delim">&lt;</span>charT<span class="delim">,</span> traits<span class="delim">&gt;&amp;</span> os<span class="delim">,</span> <span class="keyword">const</span> delimited_range_writer<span class="delim">&lt;</span>Range<span class="delim">,</span> Delimiter<span class="delim">&gt;&amp;</span> p<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Effects:</dt>
+  <dd>Acts as a <span class="concept">RangeOutputOperation</span>, writing values of the range referenced by <code class="lang-cpp">p</code> to <code class="lang-cpp">os</code>, until either the range is completely written or <code class="lang-cpp"><span class="keyword">bool</span><span class="delim">(</span>os<span class="delim">)</span></code> is <code class="lang-cpp"><span class="keyword">false</span></code>.</dd>
+  <dd>After each value except the last, the delimiter is written to <code class="lang-cpp">os</code>.</dd>
+  <dt>Returns:</dt>
+  <dd><code class="lang-cpp">os</code>.</dd>
+</dl>
+</div>
+</section>
+
+</section>
+
+<section id="write_all-intro">
+<h1>Function template <code class="lang-cpp">write_all</code></h1>
+
+<div class="synopsis">
+<pre><code class="lang-cpp"><span class="pp">#include &lt;iosfwd&gt;</span>
+
+<span class="keyword">namespace</span> std <span class="delim">{</span>
+  <span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    range_writer<span class="delim">&lt;</span>Range<span class="delim">&amp;&amp;&gt;</span> write_all<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">);</span>
+  <span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+    delimited_range_writer<span class="delim">&lt;</span>Range<span class="delim">&amp;&amp;,</span> Delimiter<span class="delim">&amp;&amp;&gt;</span>
+      write_all<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">,</span> Delimiter<span class="delim">&amp;&amp;</span> delim<span class="delim">);</span>
+<span class="delim">}</span></code></pre>
+</div>
+</section>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">&gt;</span>
+  range_writer<span class="delim">&lt;</span>Range<span class="delim">&amp;&amp;&gt;</span> write_all<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Returns:</dt>
+  <dd>A <code class="lang-cpp">range_writer<span class="delim">&lt;</span>Range<span class="delim">&gt;</span></code> object that refers to <code class="lang-cpp">range</code>.</dd>
+</dl>
+</div>
+
+<div class="entry">
+<pre><code class="lang-cpp"><span class="keyword">template</span> <span class="delim">&lt;</span><span class="keyword">class</span> Range<span class="delim">,</span> <span class="keyword">class</span> Delimiter<span class="delim">&gt;</span>
+  delimited_range_writer<span class="delim">&lt;</span>Range<span class="delim">&amp;&amp;,</span> Delimiter<span class="delim">&amp;&amp;&gt;</span> write_all<span class="delim">(</span>Range<span class="delim">&amp;&amp;</span> range<span class="delim">,</span> Delimiter<span class="delim">&amp;&amp;</span> delim<span class="delim">);</span></code></pre>
+<dl>
+  <dt>Returns:</dt>
+  <dd>A <code class="lang-cpp">delimited_range_writer<span class="delim">&lt;</span>Range<span class="delim">,</span> Delimiter<span class="delim">&gt;</span></code> object that refers to <code class="lang-cpp">range</code> and <code class="lang-cpp">delim</code>.</dd>
+</dl>
+</div>
+
+</section>
+
 </section>
 </main>
 <footer>
