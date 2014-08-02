@@ -14,7 +14,7 @@
  */
 
 // Proposed range streaming facilities.
-// Version: 1.4.0
+// Version: 1.5.0
 
 /* 
  * This C++ header file implements a proposed extension to the C++ standard
@@ -22,6 +22,9 @@
  * without requiring the use of the algorithms library.
  * 
  * For more details, check https://github.com/DarkerStar/cpp-range-streaming
+ * 
+ * Version 1.5.0:
+ *   * Added write_all().
  * 
  * Version 1.4.0:
  *   * Added overwrite() and insert(), and back_insert_n() and front_insert_n().

@@ -1,3 +1,47 @@
+2014-08-02  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
+     
+     * include/stream_range:
+     (std::write_all): New function template (two overloads).
+     (std::range_writer): New class template.
+     (std::operator<< with std::range_writer const&): New insert operator.
+     (std::delimited_range_writer): New class template.
+     (std::operator<< with std::delimited_range_writer const&): New insert operator.
+     
+     * test/Makefile: Added write_all.cpp and write_all_delimited.cpp tests.
+     
+     * test/write_all.cpp: New test suite source file.
+     (WriteAll, Types): New test.
+     (WriteAll, LvalueRange): New test.
+     (WriteAll, RvalueRange): New test.
+     (WriteAll, ErrorChecking): New test.
+     (WriteAll, Formatting): New test.
+     (noncopyable_range): New class template.
+     (noncopyable_nonmoveable_range): New class template.
+     
+     * test/write_all_delimited.cpp: New test suite source file.
+     (WriteAllDelim, Types): New test.
+     (WriteAllDelim, LvalueRange): New test.
+     (WriteAllDelim, RvalueRange): New test.
+     (WriteAllDelim, ErrorChecking): New test.
+     (WriteAllDelim, Formatting): New test.
+     (noncopyable_range): New class template.
+     (noncopyable_nonmoveable_range): New class template.
+     (incrementing_integer_delimiter): New class.
+     
+     * doc/reference.html: New documentation file.
+     
+     * doc/specification.html: Added documentation for write_all.
+     
+     * doc/style/reference.css: New documentation style file.
+     
+     * doc/style/specification.css: Style tweaks.
+     
+     * doc/style/code.css: Style tweaks.
+     
+     * doc/Ideas: New ideas added.
+
+
+
 2014-07-25  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
      
      * include/stream_range: Removed documentation in comments.

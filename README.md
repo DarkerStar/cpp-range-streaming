@@ -1,7 +1,7 @@
 C++ range streaming proposal
 ============================
 
-Version: 1.4.0
+Version: 1.5.0
 
 
 
@@ -115,13 +115,13 @@ This proposal suggests the addition of new manipulator-like functions (but
 Writing the contents of a range `r` to a stream is as simple as:
 
 ```C++
-out << std::stream_range(r);
+out << std::write_all(r);
 ```
 
 If you want delimiters between each value written:
 
 ```C++
-out << std::stream_range(r, '\n');
+out << std::write_all(r, '\n');
 ```
 
 And because this structure is natural for I/O, everything else becomes easier.
@@ -138,16 +138,16 @@ With range streaming, that becomes:
 
 ```C++
 auto v = std::vector<int>{1, 4, 6};
-std::cout << '(' << std::stream_range(v, ", ") << ')'; // Prints (1, 4, 6)
+std::cout << '(' << std::write_all(v, ", ") << ')'; // Prints (1, 4, 6)
 ```
 
 Or even more tersely:
 
 ```C++
-std::cout << '(' << std::stream_range({ 1, 4, 6 }, ", ") << ')';
+std::cout << '(' << std::write_all({ 1, 4, 6 }, ", ") << ')';
 
 // or if you really want to use a vector...
-std::cout << '(' << std::stream_range(std::vector<int>{ 1, 4, 6 }, ", ") << ')';
+std::cout << '(' << std::write_all(std::vector<int>{ 1, 4, 6 }, ", ") << ')';
 ```
 
 Unlike with the copy/stream-iterator model, stream errors are detected and
@@ -157,7 +157,7 @@ returns immediately. You can query the number of elements that were written
 with the `count()` function:
 
 ```C++
-auto p = std::stream_range(r);
+auto p = std::write_all(r);
 out << r;
 std::cout << p.count() << " items were written of " << r.size() << " in the range.";
 ```
@@ -169,7 +169,7 @@ With the following code:
 std::cout.fill('_');
 std::cout.setf(std::ios_base::hex, std::ios_base::basefield);
 
-std::cout << 'x' << std::setw(5) << std::stream_range(r, '|') << 'x';
+std::cout << 'x' << std::setw(5) << std::write_all(r, '|') << 'x';
 ```
 
 Then the output will be (dependent on the content of `r`):
