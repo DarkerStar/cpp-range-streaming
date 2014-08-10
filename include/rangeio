@@ -1,0 +1,355 @@
+/* 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef STD_RANGEIO_
+#define STD_RANGEIO_
+
+#include <iosfwd>
+#include <iterator> // Needed for iterator_traits and begin()
+#include <limits>   // Needed for numeric_limits<size_t>::max()
+#include <utility>
+
+namespace std {
+
+namespace rangeio_detail {
+
+template <typename Range>
+using RangeIterator = decltype(begin(declval<Range&>()));
+
+template <typename Range>
+using RangeConstIterator = decltype(begin(declval<Range>()));
+
+template <typename Range>
+using RangeValueType = typename iterator_traits<RangeIterator<Range>>::value_type;
+
+template <typename CharT, typename Traits>
+struct stream_formatting_saver
+{
+  explicit stream_formatting_saver(basic_ios<CharT, Traits>& s) :
+    stream_{s},
+    flags_{s.flags()},
+    width_{s.width()},
+    precision_{s.precision()},
+    fill_{s.fill()}
+  {}
+  
+  void restore() const
+  {
+    stream_.flags(flags_);
+    stream_.fill(fill_);
+    stream_.precision(precision_);
+    stream_.width(width_);
+  }
+  
+  basic_ios<CharT, Traits>& stream_;
+  typename basic_ios<CharT, Traits>::fmtflags const flags_;
+  streamsize const width_;
+  streamsize const precision_;
+  CharT const fill_;
+};
+
+template <typename Range>
+struct overwrite_behaviour
+{
+  auto prepare(Range& r, RangeIterator<Range>& i) -> bool
+  {
+    i = begin(r);
+    return true;
+  }
+  
+  template <typename CharT, typename Traits>
+  auto input(basic_istream<CharT, Traits>& in, Range& r, RangeIterator<Range>& i, size_t) -> bool
+  {
+    if (i != end(r) && (in >> *i))
+    {
+      ++i;
+      return true;
+    }
+    
+    return false;
+  }
+};
+
+template <typename Range>
+class back_insert_behaviour
+{
+public:
+  back_insert_behaviour() : v_{} {}
+  
+  explicit back_insert_behaviour(size_t n) : n_{n}, v_{} {}
+  
+  back_insert_behaviour(size_t n, RangeValueType<Range> v) : n_{n}, v_{move(v)} {}
+  
+  auto prepare(Range& r, RangeIterator<Range>& i) -> bool
+  {
+    i = end(r);
+    return true;
+  }
+  
+  template <typename CharT, typename Traits>
+  auto input(basic_istream<CharT, Traits>& in, Range& r, RangeIterator<Range>& i, size_t n) -> bool
+  {
+    if ((n < n_) && (in >> v_))
+    {
+      r.push_back(move(v_));
+      i = end(r);
+      return true;
+    }
+    
+    return false;
+  }
+  
+private:
+  size_t const n_ = numeric_limits<size_t>::max();
+  RangeValueType<Range> v_;
+};
+
+template <typename Range>
+class front_insert_behaviour
+{
+public:
+  front_insert_behaviour() : v_{} {}
+  
+  explicit front_insert_behaviour(size_t n) : n_{n}, v_{} {}
+  
+  front_insert_behaviour(size_t n, RangeValueType<Range> v) : n_{n}, v_{move(v)} {}
+  
+  auto prepare(Range& r, RangeIterator<Range>& i) -> bool
+  {
+    i = begin(r);
+    return true;
+  }
+  
+  template <typename CharT, typename Traits>
+  auto input(basic_istream<CharT, Traits>& in, Range& r, RangeIterator<Range>& i, size_t n) -> bool
+  {
+    if ((n < n_) && (in >> v_))
+    {
+      r.push_front(move(v_));
+      i = begin(r);
+      return true;
+    }
+    
+    return false;
+  }
+  
+private:
+  size_t const n_ = numeric_limits<size_t>::max();
+  RangeValueType<Range> v_;
+};
+
+template <typename Range>
+class insert_behaviour
+{
+public:
+  insert_behaviour() : v_{} {}
+  
+  explicit insert_behaviour(size_t n) : n_{n}, v_{} {}
+  
+  insert_behaviour(size_t n, RangeValueType<Range> v) : n_{n}, v_{move(v)} {}
+  
+  auto prepare(Range& r, RangeIterator<Range>& i) -> bool
+  {
+    return true;
+  }
+  
+  template <typename CharT, typename Traits>
+  auto input(basic_istream<CharT, Traits>& in, Range& r, RangeIterator<Range>& i, size_t n) -> bool
+  {
+    if ((n < n_) && (in >> v_))
+    {
+      i = ++r.insert(i, move(v_));
+      return true;
+    }
+    
+    return false;
+  }
+  
+private:
+  size_t const n_ = numeric_limits<size_t>::max();
+  RangeValueType<Range> v_;
+};
+
+template <typename Range, typename Behaviour>
+class RangeInputOperation
+{
+public:
+  RangeInputOperation(Range& r, RangeIterator<Range> i, Behaviour b) :
+    range_{r},
+    op_(move(b)),
+    count_{0},
+    next_{i}
+  {}
+  
+  auto count() const noexcept -> size_t { return count_; }
+  auto next() const noexcept -> RangeIterator<Range> { return next_; }
+  
+  template <typename Range2, typename Behaviour2, typename CharT, typename Traits>
+  friend auto operator>>(basic_istream<CharT, Traits>& in, RangeInputOperation<Range2, Behaviour2>&) ->
+    basic_istream<CharT, Traits>&;
+  
+private:
+  Range& range_;
+  Behaviour op_;
+  size_t count_;
+  RangeIterator<Range> next_;
+};
+
+template <typename Range, typename Behaviour, typename CharT, typename Traits>
+auto operator>>(basic_istream<CharT, Traits>& in, RangeInputOperation<Range, Behaviour>& p) ->
+  basic_istream<CharT, Traits>&
+{
+  p.count_ = 0;
+  
+  if (p.op_.prepare(p.range_, p.next_))
+  {
+    auto const formatting = rangeio_detail::stream_formatting_saver<CharT, Traits>{in};
+    
+    while (true)
+    {
+      formatting.restore();
+      
+      if (!p.op_.input(in, p.range_, p.next_, p.count_))
+        break;
+      
+      ++p.count_;
+    }
+  }
+  
+  in.width(0);
+  
+  return in;
+}
+
+template <typename Range, typename Behaviour, typename CharT, typename Traits>
+auto operator>>(basic_istream<CharT, Traits>& in, RangeInputOperation<Range, Behaviour>&& p) ->
+  basic_istream<CharT, Traits>&
+{
+  return in >> p;
+}
+
+} // namespace rangeio_detail
+
+// Overwrite
+template <typename Range>
+auto overwrite(Range& r) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::overwrite_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::overwrite_behaviour<Range>>{
+    r, begin(r), rangeio_detail::overwrite_behaviour<Range>{} };
+}
+
+// Back insert
+template <typename Range>
+auto back_insert(Range& r) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::back_insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::back_insert_behaviour<Range>>{
+    r, end(r), rangeio_detail::back_insert_behaviour<Range>{} };
+}
+
+template <typename Range>
+auto back_insert(Range& r, rangeio_detail::RangeValueType<Range> v) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::back_insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::back_insert_behaviour<Range>>{
+    r, end(r), rangeio_detail::back_insert_behaviour<Range>{numeric_limits<size_t>::max(), move(v)} };
+}
+
+template <typename Range>
+auto back_insert_n(Range& r, size_t n) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::back_insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::back_insert_behaviour<Range>>{
+    r, end(r), rangeio_detail::back_insert_behaviour<Range>{n} };
+}
+
+template <typename Range>
+auto back_insert_n(Range& r, size_t n, rangeio_detail::RangeValueType<Range> v) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::back_insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::back_insert_behaviour<Range>>{
+    r, end(r), rangeio_detail::back_insert_behaviour<Range>{n, move(v)} };
+}
+
+// Front insert
+template <typename Range>
+auto front_insert(Range& r) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::front_insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::front_insert_behaviour<Range>>{
+    r, begin(r), rangeio_detail::front_insert_behaviour<Range>{} };
+}
+
+template <typename Range>
+auto front_insert(Range& r, rangeio_detail::RangeValueType<Range> v) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::front_insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::front_insert_behaviour<Range>>{
+    r, begin(r), rangeio_detail::front_insert_behaviour<Range>{numeric_limits<size_t>::max(), move(v)} };
+}
+
+template <typename Range>
+auto front_insert_n(Range& r, size_t n) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::front_insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::front_insert_behaviour<Range>>{
+    r, begin(r), rangeio_detail::front_insert_behaviour<Range>{n} };
+}
+
+template <typename Range>
+auto front_insert_n(Range& r, size_t n, rangeio_detail::RangeValueType<Range> v) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::front_insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::front_insert_behaviour<Range>>{
+    r, begin(r), rangeio_detail::front_insert_behaviour<Range>{n, move(v)} };
+}
+
+// Insert
+template <typename Range>
+auto insert(Range& r, rangeio_detail::RangeIterator<Range> i) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::insert_behaviour<Range>>{
+    r, i, rangeio_detail::insert_behaviour<Range>{} };
+}
+
+template <typename Range>
+auto insert(Range& r, rangeio_detail::RangeIterator<Range> i, rangeio_detail::RangeValueType<Range> v) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::insert_behaviour<Range>>{
+    r, i, rangeio_detail::insert_behaviour<Range>{numeric_limits<size_t>::max(), move(v)} };
+}
+
+template <typename Range>
+auto insert_n(Range& r, rangeio_detail::RangeIterator<Range> i, size_t n) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::insert_behaviour<Range>>{
+    r, i, rangeio_detail::insert_behaviour<Range>{n} };
+}
+
+template <typename Range>
+auto insert_n(Range& r, rangeio_detail::RangeIterator<Range> i, size_t n, rangeio_detail::RangeValueType<Range> v) ->
+  rangeio_detail::RangeInputOperation<Range, rangeio_detail::insert_behaviour<Range>>
+{
+  return rangeio_detail::RangeInputOperation<Range, rangeio_detail::insert_behaviour<Range>>{
+    r, i, rangeio_detail::insert_behaviour<Range>{n, move(v)} };
+}
+
+} // namespace std
+
+#endif // STD_RANGEIO_
