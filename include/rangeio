@@ -268,6 +268,130 @@ auto operator>>(basic_istream<CharT, Traits>& in, RangeInputOperation<Range, Ite
   return in >> p;
 }
 
+template <typename Range>
+struct write_behaviour
+{
+  using iterator_type = decltype(begin(declval<Range&>()));
+  
+  auto prepare(Range& r, iterator_type& i) -> bool
+  {
+    i = begin(r);
+    return true;
+  }
+  
+  template <typename CharT, typename Traits>
+  auto output(basic_ostream<CharT, Traits>& out, Range const& r, iterator_type& i, size_t) -> bool
+  {
+    if (i != end(r) && (out << *i))
+    {
+      ++i;
+      return true;
+    }
+    
+    return false;
+  }
+};
+
+template <typename Range, typename Delimiter>
+struct delimited_write_behaviour
+{
+  using iterator_type = decltype(begin(declval<Range&>()));
+  
+  explicit delimited_write_behaviour(Delimiter&& d) :
+    delim_{forward<Delimiter>(d)}
+  {}
+  
+  auto prepare(Range& r, iterator_type& i) -> bool
+  {
+    i = begin(r);
+    return true;
+  }
+  
+  template <typename CharT, typename Traits>
+  auto output(basic_ostream<CharT, Traits>& out, Range const& r, iterator_type& i, size_t) -> bool
+  {
+    if (i != end(r) && (out << *i))
+    {
+      return (++i == end(r)) || (out << delim_);
+    }
+    
+    return false;
+  }
+  
+  Delimiter delim_;
+};
+
+template <typename Range, typename Iterator, typename Behaviour>
+class RangeOutputOperation
+{
+public:
+  RangeOutputOperation(Range&& r, Iterator i, Behaviour b) :
+    range_{forward<Range>(r)},
+    op_(move(b)),
+    count_{0},
+    next_{i}
+  {}
+  
+  auto count() const noexcept -> size_t { return count_; }
+  auto next() const noexcept -> Iterator { return next_; }
+  
+  template <typename Range2, typename Iterator2, typename Behaviour2, typename CharT, typename Traits>
+  friend auto operator<<(basic_ostream<CharT, Traits>& out, RangeOutputOperation<Range2, Iterator2, Behaviour2>&) ->
+    basic_ostream<CharT, Traits>&;
+  
+private:
+  Range range_;
+  Behaviour op_;
+  size_t count_;
+  Iterator next_;
+};
+
+template <typename Range, typename Iterator, typename Behaviour>
+auto make_range_output_op(Range&& r, Iterator i, Behaviour b) ->
+  RangeOutputOperation<Range&&, Iterator, Behaviour>
+{
+  return { forward<Range>(r), i, move(b) };
+}
+
+template <typename Range, typename Iterator, typename Behaviour, typename CharT, typename Traits>
+auto operator<<(basic_ostream<CharT, Traits>& out, RangeOutputOperation<Range, Iterator, Behaviour>& p) ->
+  basic_ostream<CharT, Traits>&
+{
+  p.count_ = 0;
+  
+  if (p.op_.prepare(p.range_, p.next_))
+  {
+    auto const formatting = rangeio_detail::stream_formatting_saver<CharT, Traits>{out};
+    
+    while (true)
+    {
+      formatting.restore();
+      
+      if (!p.op_.output(out, p.range_, p.next_, p.count_))
+        break;
+      
+      ++p.count_;
+    }
+    
+    if (!p.count_ && static_cast<bool>(out))
+    {
+      for (auto n = out.width(); n && static_cast<bool>(out); --n)
+        out.put(out.fill());
+    }
+  }
+  
+  out.width(0);
+  
+  return out;
+}
+
+template <typename Range, typename Iterator, typename Behaviour, typename CharT, typename Traits>
+auto operator<<(basic_ostream<CharT, Traits>& out, RangeOutputOperation<Range, Iterator, Behaviour>&& p) ->
+  basic_ostream<CharT, Traits>&
+{
+  return out << p;
+}
+
 } // namespace rangeio_detail
 
 // Overwrite
@@ -371,6 +495,27 @@ auto insert(Range& r, Iterator i) ->
   rangeio_detail::RangeInputOperation<Range, Iterator, rangeio_detail::insert_behaviour<Range, Iterator>>
 {
   return insert(r, i, rangeio_detail::RangeValueType<Range>{});
+}
+
+// Write all
+template <typename Range>
+auto write_all(Range&& r) ->
+  rangeio_detail::RangeOutputOperation<Range&&, decltype(begin(r)), rangeio_detail::write_behaviour<Range>>
+{
+  using namespace rangeio_detail;
+  
+  auto i = begin(r);
+  return make_range_output_op(forward<Range>(r), i, write_behaviour<Range>{});
+}
+
+template <typename Range, typename Delimiter>
+auto write_all(Range&& r, Delimiter&& d) ->
+  rangeio_detail::RangeOutputOperation<Range&&, decltype(begin(r)), rangeio_detail::delimited_write_behaviour<Range, Delimiter&&>>
+{
+  using namespace rangeio_detail;
+  
+  auto i = begin(r);
+  return make_range_output_op(forward<Range>(r), i, delimited_write_behaviour<Range, Delimiter&&>{forward<Delimiter>(d)});
 }
 
 } // namespace std
