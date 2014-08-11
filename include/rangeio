@@ -13,6 +13,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* 
+ * This C++ header file implements a proposed extension to the C++ standard
+ * library that allows for easy and intuitive input and output of ranges,
+ * without requiring the use of the algorithms library.
+ * 
+ * For more details, check https://github.com/DarkerStar/cpp-range-streaming
+ * 
+ * Version 2.0.0:
+ *   * Complete rewrite.
+ *   * Renamed header to <rangeio>.
+ *   * Eliminated named return types.
+ * 
+ * Version 1.5.0:
+ *   * Added write_all().
+ * 
+ * Version 1.4.0:
+ *   * Added overwrite() and insert(), and back_insert_n() and front_insert_n().
+ * 
+ * Version 1.3.0:
+ *   * Added back_insert() and front_insert().
+ * 
+ * Version 1.2.0:
+ *   * Added support for preserving formatting from element to element in
+ *     input.
+ * 
+ * Version 1.1.0:
+ *   * Added support for preserving formatting from element to element in
+ *     output.
+ */
 #ifndef STD_RANGEIO_
 #define STD_RANGEIO_
 
@@ -23,17 +52,22 @@
 
 namespace std {
 
+/* 
+ * All of the monkeyworks for range IO is in this namespace.
+ */
 namespace rangeio_detail {
 
+/* 
+ * This is a helper type to get the value type of a range.
+ */
 template <typename Range>
-using RangeIterator = decltype(begin(declval<Range&>()));
+using RangeValueType = typename iterator_traits<decltype(begin(declval<Range&>()))>::value_type;
 
-template <typename Range>
-using RangeConstIterator = decltype(begin(declval<Range>()));
-
-template <typename Range>
-using RangeValueType = typename iterator_traits<RangeIterator<Range>>::value_type;
-
+/* 
+ * This is a helper class that stores the formatting state of a stream, and
+ * restores that state on demand. It is used to keep the formatting consistent
+ * for each item in the range being read or written.
+ */
 template <typename CharT, typename Traits>
 struct stream_formatting_saver
 {
@@ -60,17 +94,66 @@ struct stream_formatting_saver
   CharT const fill_;
 };
 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Traits classes for input behaviours.
+ * 
+ * To cut down on code duplication, the bulk of range input is done in a single
+ * class, with the differences in behaviours for the different operations
+ * handled by traits classes.
+ * 
+ * There are only two functions required to differentiate between input
+ * operations:
+ *   - prepare: This is called at the start of an input operation. The primary
+ *              purpose is to initialize the next() iterator to what it should
+ *              be if no input is done. For example, for front_insert(r), the
+ *              next() iterator should initially be begin(r), so if nothing is
+ *              is read during the input operation, next() returns begin(r).
+ *              For back_insert(r), the next() iterator should initially be
+ *              end(r). For insert(r, i), the next() iterator should initially
+ *              be i.
+ *   - input:   This does the actual input, checking any relevant conditions
+ *              and returning true if the input operation can continue. It also
+ *              updates the next() iterator.
+ * 
+ * There are four traits classes, for the four families of input operations:
+ * 
+ * overwrite_behaviour
+ *   - overwrite(Range&)
+ * back_insert_behaviour
+ *   - back_insert(Range&)
+ *   - back_insert(Range&, RangeValueType)
+ *   - back_insert_n(Range&, size_t)
+ *   - back_insert_n(Range&, size_t, RangeValueType)
+ * front_insert_behaviour
+ *   - front_insert(Range&)
+ *   - front_insert(Range&, RangeValueType)
+ *   - front_insert_n(Range&, size_t)
+ *   - front_insert_n(Range&, size_t, RangeValueType)
+ * insert_behaviour
+ *   - insert(Range&, Iterator)
+ *   - insert(Range&, Iterator, RangeValueType)
+ *   - insert_n(Range&, Iterator, size_t)
+ *   - insert_n(Range&, Iterator, size_t, RangeValueType)
+ * 
+ *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+/* 
+ * Traits class for overwrite behaviour.
+ */
 template <typename Range>
 struct overwrite_behaviour
 {
   using iterator_type = decltype(begin(declval<Range&>()));
   
+  // Starting iterator value for overwriting is begin(r).
   auto prepare(Range& r, iterator_type& i) -> bool
   {
     i = begin(r);
     return true;
   }
   
+  // As long as the current iterator i isn't end(r), input and overwrite *i,
+  // then increment i.
   template <typename CharT, typename Traits>
   auto input(basic_istream<CharT, Traits>& in, Range& r, iterator_type& i, size_t) -> bool
   {
@@ -90,6 +173,9 @@ auto make_overwrite_behaviour(Range&) -> overwrite_behaviour<Range>
   return {};
 }
 
+/* 
+ * Traits class for back insert behaviour.
+ */
 template <typename Range>
 class back_insert_behaviour
 {
@@ -98,12 +184,16 @@ public:
   
   back_insert_behaviour(size_t n, RangeValueType<Range> v) : n_{n}, v_{move(v)} {}
   
+  // Starting iterator value for back inserting is end(r).
   auto prepare(Range& r, iterator_type& i) -> bool
   {
     i = end(r);
     return true;
   }
   
+  // As long as we haven't read more elements than desired, read an element
+  // (overwriting the range value type member object), then push it back,
+  // and reset the iterator to the end.
   template <typename CharT, typename Traits>
   auto input(basic_istream<CharT, Traits>& in, Range& r, iterator_type& i, size_t n) -> bool
   {
@@ -129,6 +219,9 @@ auto make_back_insert_behaviour(Range&, size_t n, RangeValueType<Range> v) ->
   return {n, move(v)};
 }
 
+/* 
+ * Traits class for front insert behaviour.
+ */
 template <typename Range>
 class front_insert_behaviour
 {
@@ -137,12 +230,16 @@ public:
   
   front_insert_behaviour(size_t n, RangeValueType<Range> v) : n_{n}, v_{move(v)} {}
   
+  // Starting iterator value for front inserting is begin(r).
   auto prepare(Range& r, iterator_type& i) -> bool
   {
     i = begin(r);
     return true;
   }
   
+  // As long as we haven't read more elements than desired, read an element
+  // (overwriting the range value type member object), then push it to the
+  // front, and reset the iterator to the beginning.
   template <typename CharT, typename Traits>
   auto input(basic_istream<CharT, Traits>& in, Range& r, iterator_type& i, size_t n) -> bool
   {
@@ -168,17 +265,26 @@ auto make_front_insert_behaviour(Range&, size_t n, RangeValueType<Range> v) ->
   return {n, move(v)};
 }
 
+/* 
+ * Traits class for insert behaviour.
+ */
 template <typename Range, typename Iterator>
 class insert_behaviour
 {
 public:
   insert_behaviour(size_t n, RangeValueType<Range> v) : n_{n}, v_{move(v)} {}
   
+  // Starting iterator value for inserting is the iterator given.
   auto prepare(Range& r, Iterator& i) -> bool
   {
     return true;
   }
   
+  // As long as we haven't read more elements than desired, read an element
+  // (overwriting the range value type member object), then insert it before
+  // the desired location. The insert operation returns an iterator to the
+  // newly inserted object, so increment that to get the next position, and
+  // return it.
   template <typename CharT, typename Traits>
   auto input(basic_istream<CharT, Traits>& in, Range& r, Iterator& i, size_t n) -> bool
   {
@@ -203,6 +309,16 @@ auto make_insert_behaviour(Range&, Iterator, size_t n, RangeValueType<Range> v) 
   return {n, move(v)};
 }
 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Range input class.
+ * 
+ * This is the type that is returned by all range input functions. The Behaviour
+ * trait controls the actual input behaviour according to the function.
+ * 
+ * This type keeps track of the number of elements read in the current read
+ * operation, and the iterator to the next element in the range that can be
+ * read into.
+ *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 template <typename Range, typename Iterator, typename Behaviour>
 class RangeInputOperation
 {
@@ -214,7 +330,11 @@ public:
     next_{i}
   {}
   
+  // Returns the number of elements read in the last read operation.
   auto count() const noexcept -> size_t { return count_; }
+  
+  // Return an iterator to the next position in the range that would be read
+  // into.
   auto next() const noexcept -> Iterator { return next_; }
   
   template <typename Range2, typename Iterator2, typename Behaviour2, typename CharT, typename Traits>
@@ -235,6 +355,24 @@ auto make_range_input_op(Range& r, Iterator i, Behaviour b) ->
   return { r, i, move(b) };
 }
 
+/* This is where the magic happens for range input.
+ * 
+ * First the count is reset to zero and the traits's prepare() function is
+ * called to initialize the next() iterator.
+ * 
+ * If all that succeeds, the stream's initial formatting settings are stored
+ * (so that they can be reused for each element read), and the reading loop
+ * begins.
+ * 
+ * At each iteration of the reading loop, the stream's initial formatting is
+ * restored, then the traits's input() function is called. The input() function
+ * does the actual read and (if successful) stores the result into the range and
+ * resets the next() iterator to the next read-into position. If any of this
+ * fails or the input() function returns false, the reading loop ends. Otherwise
+ * the count of successfully read elements is incremented.
+ * 
+ * Finally, the stream's width is set to zero, and the function returns.
+ */
 template <typename Range, typename Iterator, typename Behaviour, typename CharT, typename Traits>
 auto operator>>(basic_istream<CharT, Traits>& in, RangeInputOperation<Range, Iterator, Behaviour>& p) ->
   basic_istream<CharT, Traits>&
@@ -261,6 +399,10 @@ auto operator>>(basic_istream<CharT, Traits>& in, RangeInputOperation<Range, Ite
   return in;
 }
 
+// This is only necessary because calling the range input function directly in
+// an input expression means the object it returns is a temporary, so a
+// (non-const) lvalue reference can't be bound to it. All this function does is
+// pass it to the function above.
 template <typename Range, typename Iterator, typename Behaviour, typename CharT, typename Traits>
 auto operator>>(basic_istream<CharT, Traits>& in, RangeInputOperation<Range, Iterator, Behaviour>&& p) ->
   basic_istream<CharT, Traits>&
@@ -268,17 +410,49 @@ auto operator>>(basic_istream<CharT, Traits>& in, RangeInputOperation<Range, Ite
   return in >> p;
 }
 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Traits classes for output behaviours.
+ * 
+ * To cut down on code duplication, the bulk of range output is done in a single
+ * class, with the differences in behaviours for the different operations
+ * handled by traits classes.
+ * 
+ * There are only two functions required to differentiate between output
+ * operations:
+ *   - prepare: This is called at the start of an output operation. The primary
+ *              purpose is to initialize the next() iterator to what it should
+ *              be if no output is done (ie, if the range is empty). For all
+ *              output operations, this is just begin(r).
+ *   - output:  This does the actual output, checking any relevant conditions
+ *              and returning true if the output operation can continue. It also
+ *              updates the next() iterator.
+ * 
+ * There are two traits classes, for the types of output operations:
+ * 
+ * write_behaviour
+ *   - write_all(Range&&&)
+ * delimited_write_behaviour
+ *   - write_all(Range&&&, Delimiter&&)
+ * 
+ *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+/* 
+ * Traits class for non-delimited write behaviour.
+ */
 template <typename Range>
 struct write_behaviour
 {
   using iterator_type = decltype(begin(declval<Range&>()));
   
+  // Starting iterator value for output is begin(r).
   auto prepare(Range& r, iterator_type& i) -> bool
   {
     i = begin(r);
     return true;
   }
   
+  // As long as we're not at the end of the range, write the next element,
+  // and increment the iterator.
   template <typename CharT, typename Traits>
   auto output(basic_ostream<CharT, Traits>& out, Range const& r, iterator_type& i, size_t) -> bool
   {
@@ -292,6 +466,9 @@ struct write_behaviour
   }
 };
 
+/* 
+ * Traits class for delimited write behaviour.
+ */
 template <typename Range, typename Delimiter>
 struct delimited_write_behaviour
 {
@@ -301,12 +478,16 @@ struct delimited_write_behaviour
     delim_{forward<Delimiter>(d)}
   {}
   
+  // Starting iterator value for output is begin(r).
   auto prepare(Range& r, iterator_type& i) -> bool
   {
     i = begin(r);
     return true;
   }
   
+  // As long as we're not at the end of the range, write the next element,
+  // and increment the iterator. If we're *still* not at the end of the range,
+  // write the delimiter.
   template <typename CharT, typename Traits>
   auto output(basic_ostream<CharT, Traits>& out, Range const& r, iterator_type& i, size_t) -> bool
   {
@@ -321,6 +502,17 @@ struct delimited_write_behaviour
   Delimiter delim_;
 };
 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Range output class.
+ * 
+ * This is the type that is returned by all range output functions. The
+ * Behaviour trait controls the actual output behaviour according to the
+ * function.
+ * 
+ * This type keeps track of the number of elements written in the current write
+ * operation, and the iterator to the next element in the range that can be
+ * written to.
+ *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 template <typename Range, typename Iterator, typename Behaviour>
 class RangeOutputOperation
 {
@@ -332,7 +524,11 @@ public:
     next_{i}
   {}
   
+  // Returns the number of elements read in the last read operation.
   auto count() const noexcept -> size_t { return count_; }
+  
+  // Return an iterator to the next position in the range that would be read
+  // into.
   auto next() const noexcept -> Iterator { return next_; }
   
   template <typename Range2, typename Iterator2, typename Behaviour2, typename CharT, typename Traits>
@@ -353,6 +549,29 @@ auto make_range_output_op(Range&& r, Iterator i, Behaviour b) ->
   return { forward<Range>(r), i, move(b) };
 }
 
+/* This is where the magic happens for range output.
+ * 
+ * First the count is reset to zero and the traits's prepare() function is
+ * called to initialize the next() iterator.
+ * 
+ * If all that succeeds, the stream's initial formatting settings are stored
+ * (so that they can be reused for each element), and the writing loop
+ * begins.
+ * 
+ * At each iteration of the writing loop, the stream's initial formatting is
+ * restored, then the traits's output() function is called. The output()
+ * function does the actual write and (if successful) resets the next()
+ * iterator to the next element to output. If any of this fails or the output()
+ * function returns false, the writing loop ends. Otherwise the count of
+ * successfully written elements is incremented.
+ * 
+ * If, after all that, the number of elements written is zero but the stream is
+ * okay - which implies the range was empty, either literally or because some
+ * constraint on the output function decided nothing could be written - then
+ * the stream's fill character is written width times.
+ * 
+ * Finally, the stream's width is set to zero, and the function returns.
+ */
 template <typename Range, typename Iterator, typename Behaviour, typename CharT, typename Traits>
 auto operator<<(basic_ostream<CharT, Traits>& out, RangeOutputOperation<Range, Iterator, Behaviour>& p) ->
   basic_ostream<CharT, Traits>&
@@ -385,6 +604,10 @@ auto operator<<(basic_ostream<CharT, Traits>& out, RangeOutputOperation<Range, I
   return out;
 }
 
+// This is only necessary because calling the range output function directly in
+// an output expression means the object it returns is a temporary, so a
+// (non-const) lvalue reference can't be bound to it. All this function does is
+// pass it to the function above.
 template <typename Range, typename Iterator, typename Behaviour, typename CharT, typename Traits>
 auto operator<<(basic_ostream<CharT, Traits>& out, RangeOutputOperation<Range, Iterator, Behaviour>&& p) ->
   basic_ostream<CharT, Traits>&
@@ -393,6 +616,17 @@ auto operator<<(basic_ostream<CharT, Traits>& out, RangeOutputOperation<Range, I
 }
 
 } // namespace rangeio_detail
+
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * The range I/O functions.
+ * 
+ * Everything above is behind-the-scenes details. Everything below is the actual
+ * user interface for the range I/O library.
+ * 
+ * It consists of 15 functions - 13 input, 2 output - that all take a range,
+ * possibly with other arguments, and either return a range input operation
+ * object, or a range output operation object.
+ *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 // Overwrite
 template <typename Range>
