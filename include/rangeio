@@ -437,12 +437,12 @@ auto operator>>(basic_istream<CharT, Traits>& in, RangeInputOperation<Range, Ite
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 /* 
- * Traits class for non-delimited write behaviour.
+ * Base for write behaviour traits classes.
  */
-template <typename Range>
-struct write_behaviour
+template <typename Range, typename Iterator>
+struct base_write_behaviour
 {
-  using iterator_type = decltype(begin(declval<Range&>()));
+  typedef Iterator iterator_type;
   
   // Starting iterator value for output is begin(r).
   auto prepare(Range& r, iterator_type& i) -> bool
@@ -450,11 +450,19 @@ struct write_behaviour
     i = begin(r);
     return true;
   }
-  
+};
+
+/* 
+ * Traits class for non-delimited write behaviour.
+ */
+template <typename Range, typename Iterator = decltype(begin(declval<Range&>()))>
+struct write_behaviour :
+  base_write_behaviour<Range, Iterator>
+{
   // As long as we're not at the end of the range, write the next element,
   // and increment the iterator.
   template <typename CharT, typename Traits>
-  auto output(basic_ostream<CharT, Traits>& out, Range const& r, iterator_type& i, size_t) -> bool
+  auto output(basic_ostream<CharT, Traits>& out, Range const& r, Iterator& i, size_t) -> bool
   {
     if (i != end(r) && (out << *i))
     {
@@ -469,27 +477,19 @@ struct write_behaviour
 /* 
  * Traits class for delimited write behaviour.
  */
-template <typename Range, typename Delimiter>
-struct delimited_write_behaviour
+template <typename Range, typename Delimiter, typename Iterator = decltype(begin(declval<Range&>()))>
+struct delimited_write_behaviour :
+  base_write_behaviour<Range, Iterator>
 {
-  using iterator_type = decltype(begin(declval<Range&>()));
-  
   explicit delimited_write_behaviour(Delimiter&& d) :
     delim_{forward<Delimiter>(d)}
   {}
-  
-  // Starting iterator value for output is begin(r).
-  auto prepare(Range& r, iterator_type& i) -> bool
-  {
-    i = begin(r);
-    return true;
-  }
   
   // As long as we're not at the end of the range, write the next element,
   // and increment the iterator. If we're *still* not at the end of the range,
   // write the delimiter.
   template <typename CharT, typename Traits>
-  auto output(basic_ostream<CharT, Traits>& out, Range const& r, iterator_type& i, size_t) -> bool
+  auto output(basic_ostream<CharT, Traits>& out, Range const& r, Iterator& i, size_t) -> bool
   {
     if (i != end(r) && (out << *i))
     {
