@@ -61,7 +61,7 @@ namespace rangeio_detail {
  * This is a helper type to get the value type of a range.
  */
 template <typename Range>
-using RangeValueType = typename iterator_traits<decltype(begin(declval<Range&>()))>::value_type;
+using value_type_of = typename iterator_traits<decltype(begin(declval<Range&>()))>::value_type;
 
 /* 
  * This is a helper class that stores the formatting state of a stream, and
@@ -121,41 +121,69 @@ struct stream_formatting_saver
  *   - overwrite(Range&)
  * back_insert_behaviour
  *   - back_insert(Range&)
- *   - back_insert(Range&, RangeValueType)
+ *   - back_insert(Range&, value_type_of)
  *   - back_insert_n(Range&, size_t)
- *   - back_insert_n(Range&, size_t, RangeValueType)
+ *   - back_insert_n(Range&, size_t, value_type_of)
  * front_insert_behaviour
  *   - front_insert(Range&)
- *   - front_insert(Range&, RangeValueType)
+ *   - front_insert(Range&, value_type_of)
  *   - front_insert_n(Range&, size_t)
- *   - front_insert_n(Range&, size_t, RangeValueType)
+ *   - front_insert_n(Range&, size_t, value_type_of)
  * insert_behaviour
  *   - insert(Range&, Iterator)
- *   - insert(Range&, Iterator, RangeValueType)
+ *   - insert(Range&, Iterator, value_type_of)
  *   - insert_n(Range&, Iterator, size_t)
- *   - insert_n(Range&, Iterator, size_t, RangeValueType)
+ *   - insert_n(Range&, Iterator, size_t, value_type_of)
  * 
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+/* 
+ * Base for input behaviour traits classes.
+ */
+template <typename Range, typename Iterator>
+struct basic_input_behaviour
+{
+  typedef Range                range_type;
+  typedef Iterator             iterator_type;
+  typedef value_type_of<Range> value_type;
+  
+  auto prepare(Range& r, Iterator& i) -> bool
+  {
+    i = begin(r);
+    return true;
+  }
+};
+
+/* 
+ * Base for input behaviour traits classes that do inserting. This maintains an
+ * object of the range's value type to be used as the input target.
+ */
+template <typename Range, typename Iterator>
+struct basic_insert_behaviour :
+  basic_input_behaviour<Range, Iterator>
+{
+  typedef typename basic_insert_behaviour::value_type value_type;
+  
+  basic_insert_behaviour(size_t n, value_type v) : n_{n}, v_{move(v)} {}
+  
+  size_t const n_;
+  value_type v_;
+};
 
 /* 
  * Traits class for overwrite behaviour.
  */
 template <typename Range>
-struct overwrite_behaviour
+struct overwrite_behaviour :
+  basic_input_behaviour<Range, decltype(begin(declval<Range&>()))>
 {
-  using iterator_type = decltype(begin(declval<Range&>()));
-  
-  // Starting iterator value for overwriting is begin(r).
-  auto prepare(Range& r, iterator_type& i) -> bool
-  {
-    i = begin(r);
-    return true;
-  }
+  typedef typename overwrite_behaviour::range_type    range_type;
+  typedef typename overwrite_behaviour::iterator_type iterator_type;
   
   // As long as the current iterator i isn't end(r), input and overwrite *i,
   // then increment i.
   template <typename CharT, typename Traits>
-  auto input(basic_istream<CharT, Traits>& in, Range& r, iterator_type& i, size_t) -> bool
+  auto input(basic_istream<CharT, Traits>& in, range_type& r, iterator_type& i, size_t) -> bool
   {
     if (i != end(r) && (in >> *i))
     {
@@ -177,15 +205,19 @@ auto make_overwrite_behaviour(Range&) -> overwrite_behaviour<Range>
  * Traits class for back insert behaviour.
  */
 template <typename Range>
-class back_insert_behaviour
+struct back_insert_behaviour :
+  basic_insert_behaviour<Range, decltype(begin(declval<Range&>()))>
 {
-public:
-  using iterator_type = decltype(begin(declval<Range&>()));
+  typedef typename back_insert_behaviour::range_type    range_type;
+  typedef typename back_insert_behaviour::iterator_type iterator_type;
+  typedef typename back_insert_behaviour::value_type    value_type;
   
-  back_insert_behaviour(size_t n, RangeValueType<Range> v) : n_{n}, v_{move(v)} {}
+  back_insert_behaviour(size_t n, value_type v) :
+    basic_insert_behaviour<range_type, iterator_type>{n, move(v)}
+  {}
   
   // Starting iterator value for back inserting is end(r).
-  auto prepare(Range& r, iterator_type& i) -> bool
+  auto prepare(range_type& r, iterator_type& i) -> bool
   {
     i = end(r);
     return true;
@@ -195,25 +227,21 @@ public:
   // (overwriting the range value type member object), then push it back,
   // and reset the iterator to the end.
   template <typename CharT, typename Traits>
-  auto input(basic_istream<CharT, Traits>& in, Range& r, iterator_type& i, size_t n) -> bool
+  auto input(basic_istream<CharT, Traits>& in, range_type& r, iterator_type& i, size_t n) -> bool
   {
-    if ((n < n_) && (in >> v_))
+    if ((n < this->n_) && (in >> this->v_))
     {
-      r.push_back(move(v_));
+      r.push_back(move(this->v_));
       i = end(r);
       return true;
     }
     
     return false;
   }
-  
-private:
-  size_t const n_ = numeric_limits<size_t>::max();
-  RangeValueType<Range> v_;
 };
 
 template <typename Range>
-auto make_back_insert_behaviour(Range&, size_t n, RangeValueType<Range> v) ->
+auto make_back_insert_behaviour(Range&, size_t n, value_type_of<Range> v) ->
   back_insert_behaviour<Range>
 {
   return {n, move(v)};
@@ -223,43 +251,36 @@ auto make_back_insert_behaviour(Range&, size_t n, RangeValueType<Range> v) ->
  * Traits class for front insert behaviour.
  */
 template <typename Range>
-class front_insert_behaviour
+struct front_insert_behaviour :
+  basic_insert_behaviour<Range, decltype(begin(declval<Range&>()))>
 {
-public:
-  using iterator_type = decltype(begin(declval<Range&>()));
+  typedef typename front_insert_behaviour::range_type    range_type;
+  typedef typename front_insert_behaviour::iterator_type iterator_type;
+  typedef typename front_insert_behaviour::value_type    value_type;
   
-  front_insert_behaviour(size_t n, RangeValueType<Range> v) : n_{n}, v_{move(v)} {}
-  
-  // Starting iterator value for front inserting is begin(r).
-  auto prepare(Range& r, iterator_type& i) -> bool
-  {
-    i = begin(r);
-    return true;
-  }
+  front_insert_behaviour(size_t n, value_type v) :
+    basic_insert_behaviour<range_type, iterator_type>{n, move(v)}
+  {}
   
   // As long as we haven't read more elements than desired, read an element
   // (overwriting the range value type member object), then push it to the
   // front, and reset the iterator to the beginning.
   template <typename CharT, typename Traits>
-  auto input(basic_istream<CharT, Traits>& in, Range& r, iterator_type& i, size_t n) -> bool
+  auto input(basic_istream<CharT, Traits>& in, range_type& r, iterator_type& i, size_t n) -> bool
   {
-    if ((n < n_) && (in >> v_))
+    if ((n < this->n_) && (in >> this->v_))
     {
-      r.push_front(move(v_));
-      i = begin(r);
+      r.push_front(move(this->v_));
+      i = end(r);
       return true;
     }
     
     return false;
   }
-  
-private:
-  size_t const n_ = numeric_limits<size_t>::max();
-  RangeValueType<Range> v_;
 };
 
 template <typename Range>
-auto make_front_insert_behaviour(Range&, size_t n, RangeValueType<Range> v) ->
+auto make_front_insert_behaviour(Range&, size_t n, value_type_of<Range> v) ->
   front_insert_behaviour<Range>
 {
   return {n, move(v)};
@@ -269,13 +290,19 @@ auto make_front_insert_behaviour(Range&, size_t n, RangeValueType<Range> v) ->
  * Traits class for insert behaviour.
  */
 template <typename Range, typename Iterator>
-class insert_behaviour
+struct insert_behaviour :
+  basic_insert_behaviour<Range, Iterator>
 {
-public:
-  insert_behaviour(size_t n, RangeValueType<Range> v) : n_{n}, v_{move(v)} {}
+  typedef typename insert_behaviour::range_type    range_type;
+  typedef typename insert_behaviour::iterator_type iterator_type;
+  typedef typename insert_behaviour::value_type    value_type;
+  
+  insert_behaviour(size_t n, value_type v) :
+    basic_insert_behaviour<range_type, iterator_type>{n, move(v)}
+  {}
   
   // Starting iterator value for inserting is the iterator given.
-  auto prepare(Range& r, Iterator& i) -> bool
+  auto prepare(range_type& r, Iterator& i) -> bool
   {
     return true;
   }
@@ -286,24 +313,20 @@ public:
   // newly inserted object, so increment that to get the next position, and
   // return it.
   template <typename CharT, typename Traits>
-  auto input(basic_istream<CharT, Traits>& in, Range& r, Iterator& i, size_t n) -> bool
+  auto input(basic_istream<CharT, Traits>& in, range_type& r, iterator_type& i, size_t n) -> bool
   {
-    if ((n < n_) && (in >> v_))
+    if ((n < this->n_) && (in >> this->v_))
     {
-      i = ++r.insert(i, move(v_));
+      i = ++r.insert(i, move(this->v_));
       return true;
     }
     
     return false;
   }
-  
-private:
-  size_t const n_ = numeric_limits<size_t>::max();
-  RangeValueType<Range> v_;
 };
 
 template <typename Range, typename Iterator>
-auto make_insert_behaviour(Range&, Iterator, size_t n, RangeValueType<Range> v) ->
+auto make_insert_behaviour(Range&, Iterator, size_t n, value_type_of<Range> v) ->
   insert_behaviour<Range, Iterator>
 {
   return {n, move(v)};
@@ -437,15 +460,13 @@ auto operator>>(basic_istream<CharT, Traits>& in, RangeInputOperation<Range, Ite
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 /* 
- * Base for write behaviour traits classes.
+ * Base for output behaviour traits classes.
  */
 template <typename Range, typename Iterator>
-struct base_write_behaviour
+struct basic_output_behaviour
 {
-  typedef Iterator iterator_type;
-  
   // Starting iterator value for output is begin(r).
-  auto prepare(Range& r, iterator_type& i) -> bool
+  auto prepare(Range& r, Iterator& i) -> bool
   {
     i = begin(r);
     return true;
@@ -457,7 +478,7 @@ struct base_write_behaviour
  */
 template <typename Range, typename Iterator = decltype(begin(declval<Range&>()))>
 struct write_behaviour :
-  base_write_behaviour<Range, Iterator>
+  basic_output_behaviour<Range, Iterator>
 {
   // As long as we're not at the end of the range, write the next element,
   // and increment the iterator.
@@ -479,7 +500,7 @@ struct write_behaviour :
  */
 template <typename Range, typename Delimiter, typename Iterator = decltype(begin(declval<Range&>()))>
 struct delimited_write_behaviour :
-  base_write_behaviour<Range, Iterator>
+  basic_output_behaviour<Range, Iterator>
 {
   explicit delimited_write_behaviour(Delimiter&& d) :
     delim_{forward<Delimiter>(d)}
@@ -640,7 +661,7 @@ auto overwrite(Range& r) ->
 
 // Back insert
 template <typename Range>
-auto back_insert_n(Range& r, size_t n, rangeio_detail::RangeValueType<Range> v) ->
+auto back_insert_n(Range& r, size_t n, rangeio_detail::value_type_of<Range> v) ->
   rangeio_detail::RangeInputOperation<Range, decltype(begin(r)), rangeio_detail::back_insert_behaviour<Range>>
 {
   using namespace rangeio_detail;
@@ -652,11 +673,11 @@ template <typename Range>
 auto back_insert_n(Range& r, size_t n) ->
   rangeio_detail::RangeInputOperation<Range, decltype(begin(r)), rangeio_detail::back_insert_behaviour<Range>>
 {
-  return back_insert_n(r, n, rangeio_detail::RangeValueType<Range>{});
+  return back_insert_n(r, n, rangeio_detail::value_type_of<Range>{});
 }
 
 template <typename Range>
-auto back_insert(Range& r, rangeio_detail::RangeValueType<Range> v) ->
+auto back_insert(Range& r, rangeio_detail::value_type_of<Range> v) ->
   rangeio_detail::RangeInputOperation<Range, decltype(begin(r)), rangeio_detail::back_insert_behaviour<Range>>
 {
   return back_insert_n(r, numeric_limits<size_t>::max(), move(v));
@@ -666,12 +687,12 @@ template <typename Range>
 auto back_insert(Range& r) ->
   rangeio_detail::RangeInputOperation<Range, decltype(begin(r)), rangeio_detail::back_insert_behaviour<Range>>
 {
-  return back_insert(r, rangeio_detail::RangeValueType<Range>{});
+  return back_insert(r, rangeio_detail::value_type_of<Range>{});
 }
 
 // Front insert
 template <typename Range>
-auto front_insert_n(Range& r, size_t n, rangeio_detail::RangeValueType<Range> v) ->
+auto front_insert_n(Range& r, size_t n, rangeio_detail::value_type_of<Range> v) ->
   rangeio_detail::RangeInputOperation<Range, decltype(begin(r)), rangeio_detail::front_insert_behaviour<Range>>
 {
   using namespace rangeio_detail;
@@ -683,11 +704,11 @@ template <typename Range>
 auto front_insert_n(Range& r, size_t n) ->
   rangeio_detail::RangeInputOperation<Range, decltype(begin(r)), rangeio_detail::front_insert_behaviour<Range>>
 {
-  return front_insert_n(r, n, rangeio_detail::RangeValueType<Range>{});
+  return front_insert_n(r, n, rangeio_detail::value_type_of<Range>{});
 }
 
 template <typename Range>
-auto front_insert(Range& r, rangeio_detail::RangeValueType<Range> v) ->
+auto front_insert(Range& r, rangeio_detail::value_type_of<Range> v) ->
   rangeio_detail::RangeInputOperation<Range, decltype(begin(r)), rangeio_detail::front_insert_behaviour<Range>>
 {
   return front_insert_n(r, numeric_limits<size_t>::max(), move(v));
@@ -697,12 +718,12 @@ template <typename Range>
 auto front_insert(Range& r) ->
   rangeio_detail::RangeInputOperation<Range, decltype(begin(r)), rangeio_detail::front_insert_behaviour<Range>>
 {
-  return front_insert(r, rangeio_detail::RangeValueType<Range>{});
+  return front_insert(r, rangeio_detail::value_type_of<Range>{});
 }
 
 // Insert
 template <typename Range, typename Iterator>
-auto insert_n(Range& r, Iterator i, size_t n, rangeio_detail::RangeValueType<Range> v) ->
+auto insert_n(Range& r, Iterator i, size_t n, rangeio_detail::value_type_of<Range> v) ->
   rangeio_detail::RangeInputOperation<Range, Iterator, rangeio_detail::insert_behaviour<Range, Iterator>>
 {
   using namespace rangeio_detail;
@@ -714,11 +735,11 @@ template <typename Range, typename Iterator>
 auto insert_n(Range& r, Iterator i, size_t n) ->
   rangeio_detail::RangeInputOperation<Range, Iterator, rangeio_detail::insert_behaviour<Range, Iterator>>
 {
-  return insert_n(r, i, n, rangeio_detail::RangeValueType<Range>{});
+  return insert_n(r, i, n, rangeio_detail::value_type_of<Range>{});
 }
 
 template <typename Range, typename Iterator>
-auto insert(Range& r, Iterator i, rangeio_detail::RangeValueType<Range> v) ->
+auto insert(Range& r, Iterator i, rangeio_detail::value_type_of<Range> v) ->
   rangeio_detail::RangeInputOperation<Range, Iterator, rangeio_detail::insert_behaviour<Range, Iterator>>
 {
   return insert_n(r, i, numeric_limits<size_t>::max(), move(v));
@@ -728,7 +749,7 @@ template <typename Range, typename Iterator>
 auto insert(Range& r, Iterator i) ->
   rangeio_detail::RangeInputOperation<Range, Iterator, rangeio_detail::insert_behaviour<Range, Iterator>>
 {
-  return insert(r, i, rangeio_detail::RangeValueType<Range>{});
+  return insert(r, i, rangeio_detail::value_type_of<Range>{});
 }
 
 // Write all
@@ -738,6 +759,12 @@ auto write_all(Range&& r) ->
 {
   using namespace rangeio_detail;
   
+  // NOTE: begin(r) is captured here, because r may be moved momentarily. This
+  //       is not really a solution, because after moving, i may be invalidated.
+  //       That means that the next() member of RangeOutputOperation could be
+  //       junk until the first write. How to deal with this? There seems to be
+  //       no ideal solution. Perhaps just declare that next() is undefined
+  //       until the first write? Or call prepare() in the constructor?
   auto i = begin(r);
   return make_range_output_op(forward<Range>(r), i, write_behaviour<Range>{});
 }
@@ -748,6 +775,7 @@ auto write_all(Range&& r, Delimiter&& d) ->
 {
   using namespace rangeio_detail;
   
+  // NOTE: See above.
   auto i = begin(r);
   return make_range_output_op(forward<Range>(r), i, delimited_write_behaviour<Range, Delimiter&&>{forward<Delimiter>(d)});
 }
