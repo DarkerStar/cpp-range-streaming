@@ -33,14 +33,14 @@
 
 /* Test: Verify the types associated with front_insert() are correct.
  * 
- * The return value of front_insert() is part of the specification - it must
- * return a properly-templated range_front_inserter<>. And *that* type should
- * have a count() member function that returns size_t.
+ * The return value of front_insert() should be an object with a member function
+ * named count() member function that returns size_t, and a member function
+ * named next() that returns an iterator to the range.
  */
 TEST(FrontInsert, Types)
 {
   auto v = std::deque<double>{};
-  auto const l = std::list<std::string>{};
+  auto l = std::list<std::string>{};
   
   EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert(v).count())>::value));
   EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert(l).count())>::value));
@@ -106,7 +106,8 @@ TEST(FrontInsert, Input)
  * Everything in the input sequence that can be converted to the range's value
  * type should be read until either a conversion error, an I/O error, or EOF.
  * The number of elements read should be returned by the count() member
- * function of range_front_insert<Range>.
+ * function of  the returned object. The next() member should return an iterator
+ * to the beginning of the range.
  */
 TEST(FrontInsert, ErrorChecking)
 {
@@ -184,14 +185,14 @@ TEST(FrontInsert, Formatting)
 
 /* Test: Verify the types associated with front_insert_n() are correct.
  * 
- * The return value of front_insert_n() is part of the specification - it must
- * return a properly-templated range_front_inserter<>. And *that* type should
- * have a count() member function that returns size_t.
+ * The return value of front_insert_n() should be an object with a member function
+ * named count() member function that returns size_t, and a member function
+ * named next() that returns an iterator to the range.
  */
 TEST(FrontInsertN, Types)
 {
   auto v = std::deque<double>{};
-  auto const l = std::list<std::string>{};
+  auto l = std::list<std::string>{};
   
   EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert_n(v, std::size_t{}).count())>::value));
   EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert_n(l, std::size_t{}).count())>::value));

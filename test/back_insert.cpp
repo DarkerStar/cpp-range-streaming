@@ -33,9 +33,9 @@
 
 /* Test: Verify the types associated with back_insert() are correct.
  * 
- * The return value of back_insert() is part of the specification - it must
- * return a properly-templated range_back_inserter<>. And *that* type should
- * have a count() member function that returns size_t.
+ * The return value of back_insert() should be an object with a member function
+ * named count() member function that returns size_t, and a member function
+ * named next() that returns an iterator to the range.
  */
 TEST(BackInsert, Types)
 {
@@ -106,7 +106,8 @@ TEST(BackInsert, Input)
  * Everything in the input sequence that can be converted to the range's value
  * type should be read until either a conversion error, an I/O error, or EOF.
  * The number of elements read should be returned by the count() member
- * function of range_back_insert<Range>.
+ * function of  the returned object. The next() member should return the end
+ * iterator for the range.
  */
 TEST(BackInsert, ErrorChecking)
 {
@@ -184,9 +185,9 @@ TEST(BackInsert, Formatting)
 
 /* Test: Verify the types associated with back_insert_n() are correct.
  * 
- * The return value of back_insert_n() is part of the specification - it must
- * return a properly-templated range_back_inserter<>. And *that* type should
- * have a count() member function that returns size_t.
+ * The return value of back_insert_n() should be an object with a member function
+ * named count() member function that returns size_t, and a member function
+ * named next() that returns an iterator to the range.
  */
 TEST(BackInsertN, Types)
 {

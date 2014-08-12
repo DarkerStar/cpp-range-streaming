@@ -27,32 +27,33 @@
 #include <type_traits>
 #include <vector>
 
-#include <stream_range>
+#include <rangeio>
 
 #include "gtest/gtest.h"
 
 /* Test: Verify the types associated with insert() are correct.
  * 
- * The return value of insert() is part of the specification - it must
- * return a properly-templated range_inserter<>. And *that* type should
- * have a count() member function that returns size_t.
+ * The return value of insert() should be an object with a member function
+ * named count() member function that returns size_t, and a member function
+ * named next() that returns an iterator to the range.
  */
 TEST(Insert, Types)
 {
   auto v = std::vector<double>{};
-  auto const l = std::list<std::string>{};
+  auto l = std::list<std::string>{};
   
-  EXPECT_TRUE((std::is_same<decltype(std::insert(v, v.begin())), std::range_inserter<decltype(v)>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::insert(l, l.begin())), std::range_inserter<decltype(l)>>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::insert(v, v.begin()).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::insert(l, l.begin()).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::insert(v, v.begin(), v.front()).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::insert(l, l.begin(), l.front()).count())>::value));
   
-  EXPECT_TRUE((std::is_same<decltype(std::insert(v, v.begin(), v.front())), std::range_inserter<decltype(v)>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::insert(l, l.begin(), l.front())), std::range_inserter<decltype(l)>>::value));
-  
-  EXPECT_TRUE((std::is_same<decltype(std::insert(v, v.begin()).count()), std::size_t>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::insert(v, v.begin(), v.front()).count()), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::insert(v, v.begin()).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::insert(l, l.begin()).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::insert(v, v.begin(), v.front()).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::insert(l, l.begin(), l.front()).next())>::value));
 }
 
-/* Test: Input into a range using back_insert().
+/* Test: Input into a range using insert().
  * 
  * Everything in the input sequence that can be converted to the range's value
  * type should be read until either a conversion error, an I/O error, or EOF.
@@ -100,12 +101,13 @@ TEST(Insert, Input)
   }
 }
 
-/* Test: Error checking on range streaming using back_insert().
+/* Test: Error checking on range streaming using insert().
  * 
  * Everything in the input sequence that can be converted to the range's value
  * type should be read until either a conversion error, an I/O error, or EOF.
  * The number of elements read should be returned by the count() member
- * function of range_back_insert<Range>.
+ * function of the returned object. The next() member should return an iterator
+ * to the next location that the next item read will be inserted before.
  */
 TEST(Insert, ErrorChecking)
 {
@@ -117,6 +119,7 @@ TEST(Insert, ErrorChecking)
     
     auto proxy_object = std::insert(r, std::next(r.begin(), 1));
     EXPECT_EQ(std::size_t{0}, proxy_object.count());
+    EXPECT_TRUE(std::next(r.begin(), 1) == proxy_object.next());
     
     EXPECT_FALSE(iss >> proxy_object);
     EXPECT_FALSE(iss.eof());
@@ -124,6 +127,7 @@ TEST(Insert, ErrorChecking)
     EXPECT_FALSE(iss.bad());
     
     EXPECT_EQ(std::size_t{3}, proxy_object.count());
+    EXPECT_TRUE(std::next(r.begin(), 4) == proxy_object.next());
     
     EXPECT_EQ(std::size_t{6}, r.size());
     for (auto i = r.cbegin(); i != r.cend(); ++i)
@@ -136,7 +140,7 @@ TEST(Insert, ErrorChecking)
   }
 }
 
-/* Test: Formatting when using back_insert().
+/* Test: Formatting when using insert().
  * 
  * Whatever the formatting state at the beginning of the input of a streamed
  * range, it should be applied to every element in the range.
@@ -181,26 +185,27 @@ TEST(Insert, Formatting)
 
 /* Test: Verify the types associated with insert_n() are correct.
  * 
- * The return value of insert_n() is part of the specification - it must
- * return a properly-templated range_inserter<>. And *that* type should
- * have a count() member function that returns size_t.
+ * The return value of insert_n() should be an object with a member function
+ * named count() member function that returns size_t, and a member function
+ * named next() that returns an iterator to the range.
  */
 TEST(InsertN, Types)
 {
   auto v = std::vector<double>{};
-  auto const l = std::list<std::string>{};
+  auto l = std::list<std::string>{};
   
-  EXPECT_TRUE((std::is_same<decltype(std::insert_n(v, v.begin(), std::size_t{})), std::range_inserter<decltype(v)>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::insert_n(l, l.begin(), std::size_t{})), std::range_inserter<decltype(l)>>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::insert_n(v, v.begin(), std::size_t{}).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::insert_n(l, l.begin(), std::size_t{}).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::insert_n(v, v.begin(), std::size_t{}, v.front()).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::insert_n(l, l.begin(), std::size_t{}, l.front()).count())>::value));
   
-  EXPECT_TRUE((std::is_same<decltype(std::insert_n(v, v.begin(), std::size_t{}, v.front())), std::range_inserter<decltype(v)>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::insert_n(l, l.begin(), std::size_t{}, l.front())), std::range_inserter<decltype(l)>>::value));
-  
-  EXPECT_TRUE((std::is_same<decltype(std::insert_n(v, v.begin(), std::size_t{}).count()), std::size_t>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::insert_n(v, v.begin(), std::size_t{}, v.front()).count()), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::insert_n(v, v.begin(), std::size_t{}).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::insert_n(l, l.begin(), std::size_t{}).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::insert_n(v, v.begin(), std::size_t{}, v.front()).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::insert_n(l, l.begin(), std::size_t{}, l.front()).next())>::value));
 }
 
-/* Test: Input into a range using back_insert_n().
+/* Test: Input into a range using insert_n().
  * 
  * Everything in the input sequence that can be converted to the range's value
  * type should be read until either n items are read, or there is a

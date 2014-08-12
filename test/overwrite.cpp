@@ -34,9 +34,9 @@
 
 /* Test: Verify the types associated with overwrite() are correct.
  * 
- * The return value of overwrite() is part of the specification - it must
- * return a properly-templated range_overwriter<>. And *that* type should
- * have a count() member function that returns size_t.
+ * The return value of overwrite() should be an object with a member function
+ * named count() member function that returns size_t, and a member function
+ * named next() that returns an iterator to the range.
  */
 TEST(Overwrite, Types)
 {
@@ -106,7 +106,8 @@ TEST(Overwrite, Input)
  * type should be read until either the range is completely overwritten, or a
  * conversion error, an I/O error, or EOF.
  * The number of elements read should be returned by the count() member
- * function of range_overwriter<Range>.
+ * function of the returned object. The next() member should return an iterator
+ * to the next location that will be overwritten.
  */
 TEST(Overwrite, ErrorChecking)
 {

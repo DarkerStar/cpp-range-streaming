@@ -302,7 +302,7 @@ struct insert_behaviour :
   {}
   
   // Starting iterator value for inserting is the iterator given.
-  auto prepare(range_type& r, Iterator& i) -> bool
+  auto prepare(range_type&, Iterator&) -> bool
   {
     return true;
   }
