@@ -28,7 +28,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <stream_range>
+#include <rangeio>
 
 #include "gtest/gtest.h"
 
@@ -43,10 +43,11 @@ TEST(Overwrite, Types)
   auto v = std::vector<double>{};
   auto a = std::array<std::string, 4>{};
   
-  EXPECT_TRUE((std::is_same<decltype(std::overwrite(v)), std::range_overwriter<decltype(v)>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::overwrite(a)), std::range_overwriter<decltype(a)>>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::overwrite(v).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::overwrite(a).count())>::value));
   
-  EXPECT_TRUE((std::is_same<decltype(std::overwrite(v).count()), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::overwrite(v).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(a.begin()), decltype(std::overwrite(a).next())>::value));
 }
 
 /* Test: Input into a range using overwrite().
@@ -117,6 +118,7 @@ TEST(Overwrite, ErrorChecking)
     
     auto proxy_object = std::overwrite(r);
     EXPECT_EQ(std::size_t{0}, proxy_object.count());
+    EXPECT_TRUE(r.begin() == proxy_object.next());
     
     EXPECT_FALSE(iss >> proxy_object);
     EXPECT_FALSE(iss.eof());
@@ -124,6 +126,7 @@ TEST(Overwrite, ErrorChecking)
     EXPECT_FALSE(iss.bad());
     
     EXPECT_EQ(std::size_t{3}, proxy_object.count());
+    EXPECT_TRUE((r.begin() + 3) == proxy_object.next());
     
     EXPECT_EQ(std::size_t{5}, r.size());
     EXPECT_EQ(16, r.at(0));
@@ -145,6 +148,7 @@ TEST(Overwrite, ErrorChecking)
     
     auto proxy_object = std::overwrite(r);
     EXPECT_EQ(std::size_t{0}, proxy_object.count());
+    EXPECT_TRUE(r.begin() == proxy_object.next());
     
     EXPECT_TRUE(iss >> proxy_object);
     EXPECT_FALSE(iss.eof());
@@ -152,6 +156,7 @@ TEST(Overwrite, ErrorChecking)
     EXPECT_FALSE(iss.bad());
     
     EXPECT_EQ(std::size_t{2}, proxy_object.count());
+    EXPECT_TRUE(r.end() == proxy_object.next());
     
     EXPECT_EQ(std::size_t{2}, r.size());
     EXPECT_EQ(16, r.at(0));
