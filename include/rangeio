@@ -271,7 +271,7 @@ struct front_insert_behaviour :
     if ((n < this->n_) && (in >> this->v_))
     {
       r.push_front(move(this->v_));
-      i = end(r);
+      i = begin(r);
       return true;
     }
     

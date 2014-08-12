@@ -21,7 +21,7 @@ test_obj := overwrite.o \
             iterators.o
 
 # The header being tested.
-test_inc := ../include/stream_range
+test_inc := ../include/rangeio ../include/stream_range
 
 # Need to get the include paths right, and might as well turning threading off
 # for Google Test.

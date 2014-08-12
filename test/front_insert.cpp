@@ -27,7 +27,7 @@
 #include <sstream>
 #include <type_traits>
 
-#include <stream_range>
+#include <rangeio>
 
 #include "gtest/gtest.h"
 
@@ -42,14 +42,15 @@ TEST(FrontInsert, Types)
   auto v = std::deque<double>{};
   auto const l = std::list<std::string>{};
   
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert(v)), std::range_front_inserter<decltype(v)>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert(l)), std::range_front_inserter<decltype(l)>>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert(v).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert(l).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert(v, v.front()).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert(l, l.front()).count())>::value));
   
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert(v, v.front())), std::range_front_inserter<decltype(v)>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert(l, l.front())), std::range_front_inserter<decltype(l)>>::value));
-  
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert(v).count()), std::size_t>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert(v, v.front()).count()), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::front_insert(v).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::front_insert(l).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::front_insert(v, v.front()).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::front_insert(l, l.front()).next())>::value));
 }
 
 /* Test: Input into a range using front_insert().
@@ -117,6 +118,7 @@ TEST(FrontInsert, ErrorChecking)
     
     auto proxy_object = std::front_insert(r);
     EXPECT_EQ(std::size_t{0}, proxy_object.count());
+    EXPECT_TRUE(r.begin() == proxy_object.next());
     
     EXPECT_FALSE(iss >> proxy_object);
     EXPECT_FALSE(iss.eof());
@@ -124,6 +126,7 @@ TEST(FrontInsert, ErrorChecking)
     EXPECT_FALSE(iss.bad());
     
     EXPECT_EQ(std::size_t{3}, proxy_object.count());
+    EXPECT_TRUE(r.begin() == proxy_object.next());
     
     EXPECT_EQ(std::size_t{6}, r.size());
     for (auto i = r.cbegin(); i != r.cend(); ++i)
@@ -190,14 +193,15 @@ TEST(FrontInsertN, Types)
   auto v = std::deque<double>{};
   auto const l = std::list<std::string>{};
   
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert_n(v, size_t{})), std::range_front_inserter<decltype(v)>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert_n(l, size_t{})), std::range_front_inserter<decltype(l)>>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert_n(v, std::size_t{}).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert_n(l, std::size_t{}).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert_n(v, std::size_t{}, v.front()).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert_n(l, std::size_t{}, l.front()).count())>::value));
   
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert_n(v, size_t{}, v.front())), std::range_front_inserter<decltype(v)>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert_n(l, size_t{}, l.front())), std::range_front_inserter<decltype(l)>>::value));
-  
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert_n(v, size_t{}).count()), std::size_t>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::front_insert_n(v, size_t{}, v.front()).count()), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::front_insert_n(v, std::size_t{}).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::front_insert_n(l, std::size_t{}).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::front_insert_n(v, std::size_t{}, v.front()).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::front_insert_n(l, std::size_t{}, l.front()).next())>::value));
 }
 
 /* Test: Input into a range using front_insert_n().

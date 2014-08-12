@@ -118,6 +118,7 @@ TEST(BackInsert, ErrorChecking)
     
     auto proxy_object = std::back_insert(r);
     EXPECT_EQ(std::size_t{0}, proxy_object.count());
+    EXPECT_TRUE(r.end() == proxy_object.next());
     
     EXPECT_FALSE(iss >> proxy_object);
     EXPECT_FALSE(iss.eof());
@@ -125,6 +126,7 @@ TEST(BackInsert, ErrorChecking)
     EXPECT_FALSE(iss.bad());
     
     EXPECT_EQ(std::size_t{3}, proxy_object.count());
+    EXPECT_TRUE(r.end() == proxy_object.next());
     
     EXPECT_EQ(std::size_t{6}, r.size());
     for (auto i = r.cbegin(); i != r.cend(); ++i)
