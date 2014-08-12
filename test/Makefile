@@ -12,9 +12,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # The test objects - this is the only part that should change from time to time.
-test_obj := input.o \
-            output.o \
-            overwrite.o \
+test_obj := overwrite.o \
             back_insert.o \
             front_insert.o \
             insert.o \
