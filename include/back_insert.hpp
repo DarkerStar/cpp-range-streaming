@@ -30,8 +30,7 @@ struct back_insert_behaviour
 {
   /** Constructs a back insert behaviour object.
    * 
-   * \param   n   The number of elements to read in a single read
-   *              operation.
+   * \param   n   The number of elements to read in a single read operation.
    */
   back_insert_behaviour(size_t n = numeric_limits<size_t>::max()) :
     v_{},
@@ -81,15 +80,15 @@ struct back_insert_behaviour
   {
     if ((current_ < n_) && (in >> v_))
     {
-      r.push_back(std::move(v_));
+      r.push_back(move(v_));
       return make_tuple(++current_ < n_, end(r), true, true);
     }
     
     return make_tuple(false, i, false, false);
   }
   
-  //! An instance of the range's value type, to use as a buffer
-  //! for reading into.
+  //! An instance of the range's value type, to use as a buffer for reading
+  //! into.
   value_type_of<Range> v_;
   
   //! The number of elements to read in a single read operation.
@@ -107,8 +106,8 @@ struct back_insert_behaviour
  * 
  * \tparam  Range     The range type to read into.
  * 
- * \return  A range input operation object for the given range,
- *          with the desired behaviour.
+ * \return  A range input operation object for the given range, with the desired
+ *          behaviour.
  */
 template <typename Range>
 auto back_insert(Range& r) ->
@@ -120,13 +119,13 @@ auto back_insert(Range& r) ->
 /** Back insert range input function.
  * 
  * \param   r   The range to write values to.
- * \param   n   The maximum number of values to read in a single
- *              input operation.
+ * \param   n   The maximum number of values to read in a single input
+ *              operation.
  * 
  * \tparam  Range     The range type to read into.
  * 
- * \return  A range input operation object for the given range,
- *          with the desired behaviour.
+ * \return  A range input operation object for the given range, with the desired
+ *          behaviour.
  */
 template <typename Range>
 auto back_insert_n(Range& r, size_t n) ->

@@ -30,16 +30,15 @@ struct overwrite_behaviour
 {
   /** Prepares the input operation.
    * 
-   * Simply returns \c true if the range is not empty, and gives
-   * \c begin(r) as the value for \c next .
+   * Simply returns \c true if the range is not empty, and gives \c begin(r) as
+   * the value for \c next .
    * 
    * \param  r   The range being read into.
    * \param  i   Unused.
    * 
    * \return   A tuple containing:
-   *             - \c true if the range is not empty (if it is
-   *               empty, obviously nothing can be read to
-   *               overwrite it), \c false if it is empty.
+   *             - \c true if the range is not empty (if it is empty, obviously
+   *               nothing can be overwritten), \c false if it is empty.
    *             - <tt>begin(r)</tt>.
    */
   auto prepare(Range& r, iterator_type_of<Range>) ->
@@ -50,26 +49,23 @@ struct overwrite_behaviour
   
   /** Reads a single value from the stream and stores it in the range.
    * 
-   * If \a i is not equal to <tt>end(r)</tt>, reads an formats a
-   * value from \a in , storing it in <tt>*i</tt>, then increments
-   * \a i .
+   * If \a i is not equal to <tt>end(r)</tt>, reads an formats a value from
+   * \a in , storing it in <tt>*i</tt>, then increments \a i .
    * 
    * \param  in  The stream being read.
    * \param  r   The range being read into.
-   * \param  i   An iterator to the next location in the range to
-   *             read into.
+   * \param  i   An iterator to the next location in the range to read into.
    * 
    * \tparam CharT   The character type of the stream being read.
    * \tparam Traits  The character traits of the stream being read.
    * 
    * \return   A tuple containing:
-   *             - \c true if <tt>i != end(r)</tt> and input should
-   *               continue, \c false otherwise.
+   *             - \c true if <tt>i != end(r)</tt> and input should continue,
+   *               \c false otherwise.
    *             - the value that \c next should be set to.
-   *             - \c true if a value was successfully read,
-   *               \c false if not.
-   *             - \c true if the value read was stored in
-   *               the range, \c false if it was not stored.
+   *             - \c true if a value was successfully read, \c false if not.
+   *             - \c true if the value read was stored in the range, \c false
+   *               if it was not stored.
    */
   template <typename CharT, typename Traits>
   auto read(basic_istream<CharT, Traits>& in, Range& r, iterator_type_of<Range> i) ->
@@ -93,8 +89,8 @@ struct overwrite_behaviour
  * 
  * \tparam  Range     The range type to read into.
  * 
- * \return  A range input operation object for the given range,
- *          with the desired behaviour.
+ * \return  A range input operation object for the given range, with the desired
+ *          behaviour.
  */
 template <typename Range>
 auto overwrite(Range& r) ->

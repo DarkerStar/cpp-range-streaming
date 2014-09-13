@@ -14,5 +14,10 @@ Mark A. Gibbs                                      <indi.in.the.wired@gmail.com>
 --------------------------------------------------------------------------------
 
   created      -> AUTHORS, ChangeLog, COPYING, INSTALL, NEWS, README, THANKS,
-                  include/stream_range, test/Makefile, test/main.cpp,
-                  test/input.cpp, test/output.cpp, .gitignore
+                  include/rangeio, include/back_insert.hpp,
+                  include/front_insert.hpp, include/input.hpp,
+                  include/insert.hpp, include/output.hpp, include/overwrite.hpp,
+                  include/stream-formatting-saver.hpp, test/Makefile,
+                  test/main.cpp, test/back_insert.cpp, test/boost.cpp,
+                  test/front_insert.cpp, test/insert.cpp, test/overwrite.cpp,
+                  test/write_all.cpp, test/write_all_delimited.cpp, .gitignore

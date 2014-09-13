@@ -30,8 +30,7 @@ struct front_insert_behaviour
 {
   /** Constructs a front insert behaviour object.
    * 
-   * \param   n   The number of elements to read in a single read
-   *              operation.
+   * \param   n   The number of elements to read in a single read operation.
    */
   front_insert_behaviour(size_t n = numeric_limits<size_t>::max()) :
     v_{},
@@ -81,15 +80,15 @@ struct front_insert_behaviour
   {
     if ((current_ < n_) && (in >> v_))
     {
-      r.push_front(std::move(v_));
+      r.push_front(move(v_));
       return make_tuple(++current_ < n_, begin(r), true, true);
     }
     
     return make_tuple(false, i, false, false);
   }
   
-  //! An instance of the range's value type, to use as a buffer
-  //! for reading into.
+  //! An instance of the range's value type, to use as a buffer for reading
+  //! into.
   value_type_of<Range> v_;
   
   //! The number of elements to read in a single read operation.
@@ -107,8 +106,8 @@ struct front_insert_behaviour
  * 
  * \tparam  Range     The range type to read into.
  * 
- * \return  A range input operation object for the given range,
- *          with the desired behaviour.
+ * \return  A range input operation object for the given range, with the desired
+ *          behaviour.
  */
 template <typename Range>
 auto front_insert(Range& r) ->
@@ -125,8 +124,8 @@ auto front_insert(Range& r) ->
  * 
  * \tparam  Range     The range type to read into.
  * 
- * \return  A range input operation object for the given range,
- *          with the desired behaviour.
+ * \return  A range input operation object for the given range, with the desired
+ *          behaviour.
  */
 template <typename Range>
 auto front_insert_n(Range& r, size_t n) ->

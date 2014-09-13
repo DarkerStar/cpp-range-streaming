@@ -43,17 +43,20 @@ endif
 gtest_inc := gtest/gtest.h
 gtest_obj := gtest/gtest-all.o
 
+# Test executable name.
+test_exe := rangeio_test
+
 # Restrict the suffixes to the ones used
 .SUFFIXES:
 .SUFFIXES: .cpp .cc .hpp .h .o
 
 # Default target just makes the test program.
-all : stream_range_test
+all : $(test_exe)
 
 .PHONY : all
 
 # Pretty standard build command.
-stream_range_test : $(gtest_obj) main.o $(test_obj)
+$(test_exe) : $(gtest_obj) main.o $(test_obj)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 # Dependencies. No need to muck around with automatic dependencies.
@@ -64,8 +67,8 @@ $(gtest_obj): $(gtest_inc)
 $(test_obj) : $(test_inc) $(gtest_inc)
 
 # check target builds the test program then runs it.
-check : stream_range_test
-	./stream_range_test
+check : $(test_exe)
+	./$(test_exe)
 
 .PHONY : check
 
@@ -73,6 +76,6 @@ check : stream_range_test
 clean :
 	-@rm -f *.o
 	-@rm -f gtest/*.o
-	-@rm -f stream_range_test
+	-@rm -f $(test_exe)
 
 .PHONY : clean

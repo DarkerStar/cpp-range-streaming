@@ -1,7 +1,7 @@
 C++ range streaming proposal
 ============================
 
-Version: 1.5.0
+Version: 2.0
 
 
 
@@ -22,8 +22,8 @@ page](https://github.com/DarkerStar/cpp-range-streaming/downloads).
 
 
 
-Documentation
--------------
+Motivation
+----------
 
 Currently, the canonical way to use ranges with input or output streams is to
 use stream iterators and the copy algorithm. You read a range from an input
@@ -56,8 +56,8 @@ std::copy(std::begin(r), std::end(r), std::make_ostream_joiner(out, ", "));
 ```
 
 This is good, and stream iterators in general are a powerful tool that should
-not be maligned or discarded. However, for the *vast* majority of uses, their
-advantages are outweighed by their clumsiness.
+not be maligned or discarded. However, for the *vastly* most common use case,
+their advantages are outweighed by their clumsiness.
 
 Consider the following code lifted straight out of N4066 (edited slightly to
 make the namespace prefixes consistent):
@@ -101,7 +101,7 @@ reading or writing sequences to or from streams has a number of issues:
     will merrily keep chugging along, blissfully unaware that it is just burning
     CPU cycles as it reads each element of the range and tries to print it. If
     the range is a few million elements, that could be substantial time wasted.
-    Or consider the case of streaming in N items - naturally you would use
+    Or consider the case of reading in N items - naturally you would use
     `std::copy_n()`, right? Well, that's all fine and good if there are no
     problems, but if there are any errors in reading or formatting... game over;
     you're getting a container full of junk, and you'll have no idea where
@@ -110,7 +110,10 @@ reading or writing sequences to or from streams has a number of issues:
 This proposal suggests the addition of new manipulator-like functions (but
 *not* manipulators) for streaming ranges to or from streams.
 
-### Output
+
+
+Output
+------
 
 Writing the contents of a range `r` to a stream is as simple as:
 
@@ -131,14 +134,16 @@ Recall the code from N4066:
 std::vector<int> v = {1, 4, 6};
 std::cout << "(";
 std::copy(v.begin(), v.end(), std::make_ostream_joiner(cout, ", "));
-std::cout << ")"; // Prints (1, 4, 6) as desired
+std::cout << ")";
+// Prints (1, 4, 6)
 ```
 
 With range streaming, that becomes:
 
 ```C++
 auto v = std::vector<int>{1, 4, 6};
-std::cout << '(' << std::write_all(v, ", ") << ')'; // Prints (1, 4, 6)
+std::cout << '(' << std::write_all(v, ", ") << ')';
+// Prints (1, 4, 6)
 ```
 
 Or even more tersely:
@@ -154,12 +159,22 @@ Unlike with the copy/stream-iterator model, stream errors are detected and
 handled properly. The stream's conversion to `bool` is checked after each write
 (attempt), and if it is `false`, the function stops attemping to write and
 returns immediately. You can query the number of elements that were written
-with the `count()` function:
+with `count`:
 
 ```C++
 auto p = std::write_all(r);
 out << r;
-std::cout << p.count() << " items were written of " << r.size() << " in the range.";
+auto remainder = std::vector<int>{};
+std::copy(p.next, r.end(), std::back_inserter(remainder));
+// vector remainder holds all the elements not output, if any
+```
+
+You can even recover the iterator to the next element in the range to be written:
+
+```C++
+auto p = std::write_all(r);
+out << r;
+std::cout << p.count << " items were written of " << r.size() << " in the range.";
 ```
 
 Also unlike with the copy/stream-iterator model, formatting is handled correctly.
@@ -183,7 +198,10 @@ x___19x
 x____6|___18|___97x
 ```
 
-### Input
+
+
+Input
+-----
 
 Input comes in 4 different forms:
 
@@ -203,8 +221,8 @@ auto r = std::array<int, 4>{};
 std::cin >> std::overwrite(r);
 ```
 
-The following code reads double values from `infile` until `EOF` or a parse
-error, and uses `push_back()` to add the values to `r`:
+The following code reads double values until `EOF` or a parse error, and uses
+`push_back()` to add the values to `r`:
 
 ```C++
 auto r = std::deque<double>{};
@@ -227,13 +245,17 @@ auto r = std::vector<int>{ 0, 1 };
 std::cin >> std::insert(r, std::next(std::begin(r), 1));
 ```
 
+Each of `back_insert()`, `front_insert()`, and `insert()` have an `_n` version
+(`back_insert_n()`, `front_insert_n()`, and `insert_n()`) that take an
+additional `size_t` argument that limits the number of values read.
+
 Error checking works, too:
 
 ```C++
 auto r = std::array<int, 100>{};
 auto p = std::overwrite(r);
 if (!(std::cin >> p))
-  std::cerr << "Error: only " << p.count() << " items were read successfully.";
+  std::cerr << "Error: only " << p.count << " items were read successfully.";
 ```
 
 Formatting also works:
