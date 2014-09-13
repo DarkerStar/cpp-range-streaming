@@ -21,7 +21,14 @@ test_obj := overwrite.o \
             iterators.o
 
 # The header being tested.
-test_inc := ../include/rangeio ../include/stream_range
+test_inc := ../include/rangeio \
+						../include/stream-formatting-saver.hpp \
+						../include/input.hpp \
+						../include/overwrite.hpp \
+						../include/back_insert.hpp \
+						../include/front_insert.hpp \
+						../include/insert.hpp \
+						../include/output.hpp
 
 # Need to get the include paths right, and might as well turning threading off
 # for Google Test.

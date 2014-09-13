@@ -35,19 +35,19 @@
 /* Test: Verify the types associated with overwrite() are correct.
  * 
  * The return value of overwrite() should be an object with a member function
- * named count() member function that returns size_t, and a member function
- * named next() that returns an iterator to the range.
+ * named count member function that returns size_t, and a member function
+ * named next that returns an iterator to the range.
  */
 TEST(Overwrite, Types)
 {
   auto v = std::vector<double>{};
   auto a = std::array<std::string, 4>{};
   
-  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::overwrite(v).count())>::value));
-  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::overwrite(a).count())>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::overwrite(v).count)>::value));
+  EXPECT_TRUE((std::is_same<std::size_t, decltype(std::overwrite(a).count)>::value));
   
-  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::overwrite(v).next())>::value));
-  EXPECT_TRUE((std::is_same<decltype(a.begin()), decltype(std::overwrite(a).next())>::value));
+  EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::overwrite(v).next)>::value));
+  EXPECT_TRUE((std::is_same<decltype(a.begin()), decltype(std::overwrite(a).next)>::value));
 }
 
 /* Test: Input into a range using overwrite().
@@ -105,8 +105,8 @@ TEST(Overwrite, Input)
  * Everything in the input sequence that can be converted to the range's value
  * type should be read until either the range is completely overwritten, or a
  * conversion error, an I/O error, or EOF.
- * The number of elements read should be returned by the count() member
- * function of the returned object. The next() member should return an iterator
+ * The number of elements read should be returned by the count member
+ * function of the returned object. The next member should return an iterator
  * to the next location that will be overwritten.
  */
 TEST(Overwrite, ErrorChecking)
@@ -118,16 +118,16 @@ TEST(Overwrite, ErrorChecking)
     iss.imbue(std::locale::classic());
     
     auto proxy_object = std::overwrite(r);
-    EXPECT_EQ(std::size_t{0}, proxy_object.count());
-    EXPECT_TRUE(r.begin() == proxy_object.next());
+    EXPECT_EQ(std::size_t{0}, proxy_object.count);
+    EXPECT_TRUE(r.begin() == proxy_object.next);
     
     EXPECT_FALSE(iss >> proxy_object);
     EXPECT_FALSE(iss.eof());
     EXPECT_TRUE(iss.fail());
     EXPECT_FALSE(iss.bad());
     
-    EXPECT_EQ(std::size_t{3}, proxy_object.count());
-    EXPECT_TRUE((r.begin() + 3) == proxy_object.next());
+    EXPECT_EQ(std::size_t{3}, proxy_object.count);
+    EXPECT_TRUE((r.begin() + 3) == proxy_object.next);
     
     EXPECT_EQ(std::size_t{5}, r.size());
     EXPECT_EQ(16, r.at(0));
@@ -148,16 +148,16 @@ TEST(Overwrite, ErrorChecking)
     iss.imbue(std::locale::classic());
     
     auto proxy_object = std::overwrite(r);
-    EXPECT_EQ(std::size_t{0}, proxy_object.count());
-    EXPECT_TRUE(r.begin() == proxy_object.next());
+    EXPECT_EQ(std::size_t{0}, proxy_object.count);
+    EXPECT_TRUE(r.begin() == proxy_object.next);
     
     EXPECT_TRUE(iss >> proxy_object);
     EXPECT_FALSE(iss.eof());
     EXPECT_FALSE(iss.fail());
     EXPECT_FALSE(iss.bad());
     
-    EXPECT_EQ(std::size_t{2}, proxy_object.count());
-    EXPECT_TRUE(r.end() == proxy_object.next());
+    EXPECT_EQ(std::size_t{2}, proxy_object.count);
+    EXPECT_TRUE(r.end() == proxy_object.next);
     
     EXPECT_EQ(std::size_t{2}, r.size());
     EXPECT_EQ(16, r.at(0));
