@@ -32,8 +32,17 @@ body > main {
 }
 
 /* Borders for legibility */
+body > header {
+  margin-top: 5em;
+}
+
+body > footer {
+  margin-bottom: 5em;
+}
+
 body > header, body > main, body > footer {
-  margin: 5em;
+  margin-left: 5em;
+  margin-right: 5em;
 }
 
 /* Link styling */
