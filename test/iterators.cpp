@@ -27,7 +27,9 @@
 #include <sstream>
 #include <string>
 
-#include <stream_range>
+#include <rangeio>
+
+#include <boost/range/iterator_range.hpp>
 
 #include "gtest/gtest.h"
 
@@ -133,7 +135,8 @@ TEST(Iterators, Input)
   std::istringstream iss{src};
   iss.imbue(std::locale::classic());
   
-  EXPECT_TRUE(iss >> std::stream_iterator_range(a.begin(), a.end()));
+  auto r = boost::make_iterator_range(a.begin(), a.end());
+  EXPECT_TRUE(iss >> std::overwrite(r));
   EXPECT_TRUE(std::equal(a.begin(), a.end(), expected.begin()));
   
   EXPECT_TRUE(iss >> d);
@@ -155,7 +158,7 @@ TEST(Iterators, Output)
     std::ostringstream oss;
     oss.imbue(std::locale::classic());
     
-    EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end()));
+    EXPECT_TRUE(oss << std::write_all(boost::make_iterator_range(r.begin(), r.end())));
     EXPECT_EQ("abcd", oss.str());
   }
   
@@ -167,8 +170,9 @@ TEST(Iterators, Output)
     std::ostringstream oss;
     oss.imbue(std::locale::classic());
     
-    EXPECT_TRUE(oss << std::stream_iterator_range(
-      std::istream_iterator<int>{in}, std::istream_iterator<int>{}));
+    EXPECT_TRUE(oss << std::write_all(
+      boost::make_iterator_range(
+        std::istream_iterator<int>{in}, std::istream_iterator<int>{})));
     EXPECT_EQ("32485961", oss.str());
   }
 }
@@ -190,7 +194,7 @@ TEST(Iterators, DelimitedOutput)
     
     std::ostringstream oss;
     
-    EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end(), d));
+    EXPECT_TRUE(oss << std::write_all(boost::make_iterator_range(r.begin(), r.end()), d));
     EXPECT_EQ("a***b***c***d", oss.str());
   }
   
@@ -198,7 +202,7 @@ TEST(Iterators, DelimitedOutput)
   {
     std::ostringstream oss;
     
-    EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end(), noncopyable_delimiter{"++"}));
+    EXPECT_TRUE(oss << std::write_all(boost::make_iterator_range(r.begin(), r.end()), noncopyable_delimiter{"++"}));
     EXPECT_EQ("a++b++c++d", oss.str());
   }
   
@@ -207,7 +211,7 @@ TEST(Iterators, DelimitedOutput)
     std::ostringstream oss;
     oss.imbue(std::locale::classic());
     
-    EXPECT_TRUE(oss << std::stream_iterator_range(r.begin(), r.end(), incrementing_integer_delimiter{}));
+    EXPECT_TRUE(oss << std::write_all(boost::make_iterator_range(r.begin(), r.end()), incrementing_integer_delimiter{}));
     EXPECT_EQ("a0b1c2d", oss.str());
   }
 }

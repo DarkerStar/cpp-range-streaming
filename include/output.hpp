@@ -144,28 +144,28 @@ template <typename Range>
 auto write_all(Range&& r) ->
   rangeio_detail::range_writer<Range&&>
 {
-  return {forward<Range>(r)};
+  return rangeio_detail::range_writer<Range&&>{forward<Range>(r)};
 }
 
 template <typename T>
 auto write_all(std::initializer_list<T>&& r) ->
   rangeio_detail::range_writer<std::initializer_list<T>&&>
 {
-  return {forward<std::initializer_list<T>>(r)};
+  return rangeio_detail::range_writer<std::initializer_list<T>&&>{forward<std::initializer_list<T>>(r)};
 }
 
 template <typename Range, typename Delim>
 auto write_all(Range&& r, Delim&& d) ->
   rangeio_detail::range_writer_delimited<Range&&, Delim&&>
 {
-  return {forward<Range>(r), forward<Delim>(d)};
+  return rangeio_detail::range_writer_delimited<Range&&, Delim&&>{forward<Range>(r), forward<Delim>(d)};
 }
 
 template <typename T, typename Delim>
 auto write_all(std::initializer_list<T>&& r, Delim&& d) ->
   rangeio_detail::range_writer_delimited<std::initializer_list<T>&&, Delim&&>
 {
-  return {forward<std::initializer_list<T>>(r), forward<Delim>(d)};
+  return rangeio_detail::range_writer_delimited<std::initializer_list<T>&&, Delim&&>{forward<std::initializer_list<T>>(r), forward<Delim>(d)};
 }
 
 } // namespace std

@@ -28,7 +28,7 @@
 #include <sstream>
 #include <type_traits>
 
-#include <stream_range>
+#include <rangeio>
 
 #include "gtest/gtest.h"
 
@@ -99,13 +99,11 @@ TEST(WriteAll, Types)
   auto v = std::vector<double>{};
   auto a = std::array<std::string, 4>{};
   
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(v)), std::range_writer<decltype(v)&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(a)), std::range_writer<decltype(a)&>>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(v).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(a).count), std::size_t>::value));
   
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::vector<double>{})), std::range_writer<std::vector<double>&&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::array<std::string, 4>{})), std::range_writer<std::array<std::string, 4>&&>>::value));
-  
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(v).count()), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::vector<double>{}).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::array<std::string, 4>{}).count), std::size_t>::value));
 }
 
 /* Test: Output an lvalue range using write_all().
@@ -179,7 +177,7 @@ TEST(WriteAll, ErrorChecking)
     EXPECT_TRUE(out << p);
     
     EXPECT_EQ("12.30.341e-20-0.1", out.str());
-    EXPECT_EQ(std::size_t{4}, p.count());
+    EXPECT_EQ(std::size_t{4}, p.count);
   }
   {
     std::ostringstream out{};
@@ -190,7 +188,7 @@ TEST(WriteAll, ErrorChecking)
     EXPECT_TRUE(out << p);
     
     EXPECT_EQ("567", out.str());
-    EXPECT_EQ(std::size_t{3}, p.count());
+    EXPECT_EQ(std::size_t{3}, p.count);
   }
 }
 

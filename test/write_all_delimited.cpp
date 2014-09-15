@@ -29,7 +29,7 @@
 #include <string>
 #include <type_traits>
 
-#include <stream_range>
+#include <rangeio>
 
 #include "gtest/gtest.h"
 
@@ -123,27 +123,25 @@ TEST(WriteAllDelim, Types)
   auto c = char{};
   auto const s = std::string{};
   
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(v, c)), std::range_delimited_writer<decltype(v)&, decltype(c)&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(a, c)), std::range_delimited_writer<decltype(a)&, decltype(c)&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(v, s)), std::range_delimited_writer<decltype(v)&, decltype(s)&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(a, s)), std::range_delimited_writer<decltype(a)&, decltype(s)&>>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(v, c).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(v, s).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(a, c).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(a, s).count), std::size_t>::value));
   
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(v, char{})), std::range_delimited_writer<decltype(v)&, char&&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(a, char{})), std::range_delimited_writer<decltype(a)&, char&&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(v, std::string{})), std::range_delimited_writer<decltype(v)&, std::string&&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(a, std::string{})), std::range_delimited_writer<decltype(a)&, std::string&&>>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::vector<double>{}, c).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::vector<double>{}, s).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::array<std::string, 4>{}, c).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::array<std::string, 4>{}, s).count), std::size_t>::value));
   
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::vector<double>{}, c)), std::range_delimited_writer<std::vector<double>&&, decltype(c)&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::array<std::string, 4>{}, c)), std::range_delimited_writer<std::array<std::string, 4>&&, decltype(c)&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::vector<double>{}, s)), std::range_delimited_writer<std::vector<double>&&, decltype(s)&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::array<std::string, 4>{}, s)), std::range_delimited_writer<std::array<std::string, 4>&&, decltype(s)&>>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(v, char{}).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(v, std::string{}).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(a, char{}).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(a, std::string{}).count), std::size_t>::value));
   
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::vector<double>{}, char{})), std::range_delimited_writer<std::vector<double>&&, char&&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::array<std::string, 4>{}, char{})), std::range_delimited_writer<std::array<std::string, 4>&&, char&&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::vector<double>{}, std::string{})), std::range_delimited_writer<std::vector<double>&&, std::string&&>>::value));
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::array<std::string, 4>{}, std::string{})), std::range_delimited_writer<std::array<std::string, 4>&&, std::string&&>>::value));
-  
-  EXPECT_TRUE((std::is_same<decltype(std::write_all(v, c).count()), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::vector<double>{}, char{}).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::vector<double>{}, std::string{}).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::array<std::string, 4>{}, char{}).count), std::size_t>::value));
+  EXPECT_TRUE((std::is_same<decltype(std::write_all(std::array<std::string, 4>{}, std::string{}).count), std::size_t>::value));
 }
 
 /* Test: Output an lvalue range using write_all().
@@ -238,7 +236,7 @@ TEST(WriteAllDelim, ErrorChecking)
     EXPECT_TRUE(out << p);
     
     EXPECT_EQ("12.3, 0.34, 1e-20, -0.1", out.str());
-    EXPECT_EQ(std::size_t{4}, p.count());
+    EXPECT_EQ(std::size_t{4}, p.count);
   }
   {
     std::ostringstream out{};
@@ -249,7 +247,7 @@ TEST(WriteAllDelim, ErrorChecking)
     EXPECT_TRUE(out << p);
     
     EXPECT_EQ("5#6#7", out.str());
-    EXPECT_EQ(std::size_t{3}, p.count());
+    EXPECT_EQ(std::size_t{3}, p.count);
   }
 }
 

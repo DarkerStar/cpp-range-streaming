@@ -28,7 +28,7 @@
 #include <sstream>
 #include <vector>
 
-#include <stream_range>
+#include <rangeio>
 
 #include <boost/range/adaptors.hpp>
 
@@ -55,14 +55,14 @@ TEST(Boost, AdaptedOutput)
   {
     std::ostringstream oss{};
     
-    EXPECT_TRUE(oss << std::stream_range(v | reversed | filtered(is_even{})));
+    EXPECT_TRUE(oss << std::write_all(v | reversed | filtered(is_even{})));
     EXPECT_EQ("108642", oss.str());
   }
   
   {
     std::ostringstream oss{};
     
-    EXPECT_TRUE(oss << std::stream_range(v | reversed | filtered(is_odd{}), ", "));
+    EXPECT_TRUE(oss << std::write_all(v | reversed | filtered(is_odd{}), ", "));
     EXPECT_EQ("9, 7, 5, 3, 1", oss.str());
   }
 }
