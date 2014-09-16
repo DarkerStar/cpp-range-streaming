@@ -18,9 +18,9 @@
  * using the range adaptors in Boost.Range. Both the versions with and without
  * delimiters are tested.
  * 
- * If you don't have Boost, or if you want to disable testing with Boost,
- * just set a shell variable NO_BOOST before running make (for example: by
- * running the command "NO_BOOST=1 make check", without the quotes).
+ * If you have Boost, and if you want to enable testing with Boost, just set a
+ * shell variable JAVE_BOOST before running make (for example: by running the
+ * command "make HAVE_BOOST=1 check", without the quotes).
  * 
  * These tests are not meant to be exhaustive, merely illustrative.
  */

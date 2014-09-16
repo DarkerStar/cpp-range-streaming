@@ -15,7 +15,8 @@
 
 /* 
  * This file contains the tests for the proposed range streaming facilities,
- * using iterators. Both input and output is tested.
+ * using iterators. Boost.Range's iterator_range is used in lieu of a standard
+ * iterator range type. Both input and output is tested.
  * 
  * These tests are not meant to be exhaustive, merely illustrative.
  */
@@ -99,11 +100,11 @@ auto operator<<(std::ostream& out, noncopyable_nonmoveable_delimiter const& d) -
  */
 struct incrementing_integer_delimiter
 {
-  mutable unsigned i = 0u;
+  unsigned i = 0u;
 };
 
 template <typename CharT, typename Traits>
-auto operator<<(std::basic_ostream<CharT, Traits>& out, incrementing_integer_delimiter const& iid) ->
+auto operator<<(std::basic_ostream<CharT, Traits>& out, incrementing_integer_delimiter& iid) ->
   std::basic_ostream<CharT, Traits>&
 {
   out << iid.i;
@@ -115,11 +116,6 @@ auto operator<<(std::basic_ostream<CharT, Traits>& out, incrementing_integer_del
 } // anonymous namespace
 
 /* Test: Input into a range defined by a pair of iterators.
- * 
- * The "basic" use of std::stream_iterator_range() with input streams, replaces
- * each element in the range by reading a new value from the input stream.
- * Should leave the stream in the same state it would be in if the values were
- * read by a manual loop.
  */
 TEST(Iterators, Input)
 {
@@ -144,11 +140,6 @@ TEST(Iterators, Input)
 }
 
 /* Test: Output of a range given by an iterator pair.
- * 
- * std::stream_iterator_range(b, e) is just
- * std::stream_range(make_range(b, e)), where make_range() is a function
- * that creates a simple object with begin() and end() functions that just
- * return b and e respectively.
  */
 TEST(Iterators, Output)
 {
@@ -178,11 +169,6 @@ TEST(Iterators, Output)
 }
 
 /* Test: Output of a range given by an iterator pair with a delimiter.
- * 
- * std::stream_iterator_range(b, e, d) is just
- * std::stream_range(make_range(b, e), d), where make_range() is a function
- * that creates a simple object with begin() and end() functions that just
- * return b and e respectively.
  */
 TEST(Iterators, DelimitedOutput)
 {

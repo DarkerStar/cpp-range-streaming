@@ -90,9 +90,8 @@ public:
 /* Test: Verify the types associated with the non-delimited write_all() are
  * correct.
  * 
- * The return value of write_all() is part of the specification - it must
- * return a properly-templated range_writer<>. And *that* type should
- * have a count() member function that returns size_t.
+ * The return value of write_all() should have a size_t count member, and a next
+ * member that is an iterator to the range.
  */
 TEST(WriteAll, Types)
 {
@@ -161,8 +160,9 @@ TEST(WriteAll, RvalueRange)
 /* Test: Error checking on range streaming using write_all().
  * 
  * The entire range should be written to the output stream.
- * The number of elements read should be returned by the count() member
- * function of range_writer<Range>.
+ * The number of elements read should be in the count member.
+ * The next member should be an iterator to the next element in the
+ * range to write (or end if there are no more to write).
  */
 TEST(WriteAll, ErrorChecking)
 {
@@ -178,6 +178,7 @@ TEST(WriteAll, ErrorChecking)
     
     EXPECT_EQ("12.30.341e-20-0.1", out.str());
     EXPECT_EQ(std::size_t{4}, p.count);
+    EXPECT_EQ(r.end(), p.next);
   }
   {
     std::ostringstream out{};

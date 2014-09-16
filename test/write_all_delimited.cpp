@@ -111,9 +111,8 @@ auto operator<<(std::basic_ostream<CharT, Traits>& out, incrementing_integer_del
 /* Test: Verify the types associated with the delimited write_all() are
  * correct.
  * 
- * The return value of write_all() is part of the specification - it must
- * return a properly-templated range_delimited_writer<>. And *that* type should
- * have a count() member function that returns size_t.
+ * The return value of write_all() should have a size_t count member, and a next
+ * member that is an iterator to the range.
  */
 TEST(WriteAllDelim, Types)
 {
@@ -219,8 +218,9 @@ TEST(WriteAllDelim, RvalueRange)
 /* Test: Error checking on range streaming using write_all().
  * 
  * The entire range should be written to the output stream.
- * The number of elements read should be returned by the count() member
- * function of range_delimited_writer<Range>.
+ * The number of elements read should be in the count member.
+ * The next member should be an iterator to the next element in the
+ * range to write (or end if there are no more to write).
  */
 TEST(WriteAllDelim, ErrorChecking)
 {
@@ -237,6 +237,7 @@ TEST(WriteAllDelim, ErrorChecking)
     
     EXPECT_EQ("12.3, 0.34, 1e-20, -0.1", out.str());
     EXPECT_EQ(std::size_t{4}, p.count);
+    EXPECT_EQ(r.end(), p.next);
   }
   {
     std::ostringstream out{};

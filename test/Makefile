@@ -17,8 +17,7 @@ test_obj := overwrite.o \
             front_insert.o \
             insert.o \
             write_all.o \
-            write_all_delimited.o \
-            iterators.o
+            write_all_delimited.o
 
 # The header being tested.
 test_inc := ../include/rangeio \
@@ -36,7 +35,8 @@ CPPFLAGS += -I../include -I. -DGTEST_HAS_PTHREAD=0
 
 # Include Boost test only if requested.
 ifdef HAVE_BOOST
-test_obj += boost.o
+test_obj += boost.o \
+            iterators.o
 endif
 
 # Google test stuff.

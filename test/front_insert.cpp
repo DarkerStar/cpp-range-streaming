@@ -33,9 +33,8 @@
 
 /* Test: Verify the types associated with front_insert() are correct.
  * 
- * The return value of front_insert() should be an object with a member function
- * named count member function that returns size_t, and a member function
- * named next that returns an iterator to the range.
+ * The return value of front_insert() should be an object with a size_t member
+ * named count, and a member named next that is an iterator to the range.
  */
 TEST(FrontInsert, Types)
 {
@@ -44,13 +43,9 @@ TEST(FrontInsert, Types)
   
   EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert(v).count)>::value));
   EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert(l).count)>::value));
-  //EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert(v, v.front()).count)>::value));
-  //EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert(l, l.front()).count)>::value));
   
   EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::front_insert(v).next)>::value));
   EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::front_insert(l).next)>::value));
-  //EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::front_insert(v, v.front()).next)>::value));
-  //EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::front_insert(l, l.front()).next)>::value));
 }
 
 /* Test: Input into a range using front_insert().
@@ -185,9 +180,8 @@ TEST(FrontInsert, Formatting)
 
 /* Test: Verify the types associated with front_insert_n() are correct.
  * 
- * The return value of front_insert_n() should be an object with a member function
- * named count member function that returns size_t, and a member function
- * named next that returns an iterator to the range.
+ * The return value of front_insert_n() should be an object with a size_t member
+ * named count, and a member named next that is an iterator to the range.
  */
 TEST(FrontInsertN, Types)
 {
@@ -196,13 +190,9 @@ TEST(FrontInsertN, Types)
   
   EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert_n(v, std::size_t{}).count)>::value));
   EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert_n(l, std::size_t{}).count)>::value));
-  //EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert_n(v, std::size_t{}, v.front()).count)>::value));
-  //EXPECT_TRUE((std::is_same<std::size_t, decltype(std::front_insert_n(l, std::size_t{}, l.front()).count)>::value));
   
   EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::front_insert_n(v, std::size_t{}).next)>::value));
   EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::front_insert_n(l, std::size_t{}).next)>::value));
-  //EXPECT_TRUE((std::is_same<decltype(v.begin()), decltype(std::front_insert_n(v, std::size_t{}, v.front()).next)>::value));
-  //EXPECT_TRUE((std::is_same<decltype(l.begin()), decltype(std::front_insert_n(l, std::size_t{}, l.front()).next)>::value));
 }
 
 /* Test: Input into a range using front_insert_n().
