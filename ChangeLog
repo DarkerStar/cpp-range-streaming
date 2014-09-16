@@ -1,3 +1,128 @@
+2014-09-16  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
+     
+     * include/rangeio: New header file.
+     
+     * include/input.hpp: New header file.
+     (std::input): New function template (two overloads).
+     (std::rangeio_detail::range_input_operation): New class template.
+     (std::rangeio_detail::operator>> with std::rangeio_detail::range_input_operation&): New extract operator.
+     (std::rangeio_detail::operator>> with std::rangeio_detail::range_input_operation&&): New extract operator.
+     (std::rangeio_detail::iterator_type_of): New helper type.
+     (std::rangeio_detail::value_type_of): New helper type.
+     
+     * include/output.hpp: New header file.
+     (std::write_all): New function template (four overloads).
+     (std::rangeio_detail::range_writer): New class template.
+     (std::rangeio_detail::operator<< with std::rangeio_detail::range_writer&): New insert operator.
+     (std::rangeio_detail::operator<< with std::rangeio_detail::range_writer&&): New insert operator.
+     (std::rangeio_detail::range_writer_delimited): New class template.
+     (std::rangeio_detail::operator<< with std::rangeio_detail::range_writer_delimited&): New insert operator.
+     (std::rangeio_detail::operator<< with std::rangeio_detail::range_writer_delimited&&): New insert operator.
+     
+     * include/overwrite.hpp: New header file.
+     (std::overwrite): New function template.
+     (std::rangeio_detail::overwrite_behaviour): New class template.
+     
+     * include/back_insert.hpp: New header file.
+     (std::back_insert): New function template.
+     (std::back_insert_n): New function template.
+     (std::rangeio_detail::back_insert_behaviour): New class template.
+     
+     * include/front_insert.hpp: New header file.
+     (std::front_insert): New function template.
+     (std::front_insert_n): New function template.
+     (std::rangeio_detail::front_insert_behaviour): New class template.
+     
+     * include/insert.hpp: New header file.
+     (std::insert): New function template.
+     (std::insert_n): New function template.
+     (std::rangeio_detail::insert_behaviour): New class template.
+     
+     * include/stream-formatting-saver.hpp: New header file.
+     (std::rangeio_detail::stream_formatting_saver): New class template.
+     
+     * include/stream_range: Header removed.
+     
+     * test/Makefile:
+     Updated list of test objects.
+     Updated list of headers.
+     Moved iterators test to Boost test list.
+     Changed test exe name.
+     
+     * test/overwrite.cpp:
+     Updated header.
+     (Overwrite, Types): Changed count() to count.
+     (Overwrite, ErrorChecking): Changed count() to count, added next test.
+     
+     * test/back_insert.cpp:
+     Updated header.
+     (BackInsert, Types): Added list test, removed non-default constructor tests, changed count() to count.
+     (BackInsert, ErrorChecking): Changed count() to count, added next test.
+     (BackInsertN, Types): Added list test, removed non-default constructor tests, changed count() to count.
+     (BackInsertN, ErrorChecking): Changed count() to count, added next test.
+     
+     * test/front_insert.cpp:
+     Updated header.
+     (FrontInsert, Types): Added list test, removed non-default constructor tests, changed count() to count.
+     (FrontInsert, ErrorChecking): Changed count() to count, added next test.
+     (FrontInsertN, Types): Added list test, removed non-default constructor tests, changed count() to count.
+     (FrontInsertN, ErrorChecking): Changed count() to count, added next test.
+     
+     * test/insert.cpp:
+     Updated header.
+     (Insert, Types): Added list test, removed non-default constructor tests, changed count() to count.
+     (Insert, ErrorChecking): Changed count() to count, added next test.
+     (InsertN, Types): Added list test, removed non-default constructor tests, changed count() to count.
+     (InsertN, ErrorChecking): Changed count() to count, added next test.
+     
+     * test/write_all.cpp:
+     Updated header.
+     (WriteAll, Types): Changed count() to count.
+     (WriteAll, ErrorChecking): Changed count() to count, added next test.
+     
+     * test/write_all_delimited.cpp:
+     Updated header.
+     (WriteAllDelim, Types): Changed count() to count.
+     (WriteAllDelim, ErrorChecking): Changed count() to count, added next test.
+     
+     * test/iterators.cpp:
+     Updated header.
+     (Iterators, Input): Updated to write_all.
+     (Iterators, Output): Updated to write_all.
+     (Iterators, DelimitedOutput): Updated to write_all.
+     (incrementing_integer_delimiter): Removed mutable on counter.
+     (operator<< with incrementing_integer_delimiter&): Removed const on argument.
+     
+     * test/boost.cpp:
+     Updated header.
+     (Boost, AdaptedOutput): Changed stream_range to write_all.
+     
+     * test/input.cpp: Removed.
+     
+     * test/output.cpp: Removed.
+     
+     * doc/reference.html: Updated reference for v2.0.
+     
+     * doc/specification.html: Updated specification for v2.0.
+     
+     * doc/style/style.css: Fixed margins.
+     
+     * doc/Ideas: Removed implemented ideas.
+     
+     * AUTHORS: New project contributor records.
+     
+     * README: Updated documentation.
+     
+     * README.md: Updated documentation.
+     
+     * INSTALL: Updated installation instructions.
+     
+     * NEWS: Updated.
+     
+     * .gitignore: Changed test exe name.
+
+
+
 2014-08-02  Mark A. Gibbs  <indi.in.the.wired@gmail.com>
      
      * include/stream_range:

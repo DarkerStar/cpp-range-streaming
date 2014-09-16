@@ -20,4 +20,8 @@ Mark A. Gibbs                                      <indi.in.the.wired@gmail.com>
                   include/stream-formatting-saver.hpp, test/Makefile,
                   test/main.cpp, test/back_insert.cpp, test/boost.cpp,
                   test/front_insert.cpp, test/insert.cpp, test/overwrite.cpp,
-                  test/write_all.cpp, test/write_all_delimited.cpp, .gitignore
+                  test/write_all.cpp, test/write_all_delimited.cpp, doc/Ideas,
+                  doc/reference.html, doc/specification.html,
+                  doc/style/style.css, doc/style/code.css,
+                  doc/style/reference.html, doc/style/specification.html,
+                  .gitignore

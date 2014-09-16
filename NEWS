@@ -1,3 +1,11 @@
+Version 2.0.0 ----------------------------------------------------- [2014-09-16]
+
+*   Range I/O header renamed <rangeio>.
+*   Complete rewrite of I/O functions, refactoring into multiple headers for
+    easier tweaking.
+*   Return types no longer specified, just their behaviour.
+
+
 Version 1.5.0 ----------------------------------------------------- [2014-08-02]
 
 *   Range output operation added.

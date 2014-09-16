@@ -4,11 +4,11 @@ Installation Instructions
 Library installation
 ====================
 
-   The library does not require installation. It consists of a single
-C++ header file - stream_range. To use the library facilities, simply
-make sure that the header file can be find in the include search path
-(either by placing it with the system includes, or - better - using a
-compiler option to add it to the include search path).
+   The library does not require installation. It consists of a set of
+C++ header files (all in the directory "include"). To use the library
+facilities, simply make sure that the header files can be found in the
+include search path (either by placing it with the system includes, or
+using a compiler option to add it to the include search path).
 
 Testing
 =======
