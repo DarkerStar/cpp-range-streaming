@@ -1,31 +1,10 @@
 Unsorted ideas for improving the proposal:
 
-*   Rename header from <stream_range> to <rangeio>.
-
 *   Collapse *insert_n() functions into *insert() functions like this:
     
         *insert(Range& r,
                size_t n = numeric_limits<size_t>::max(),
                RangeValueType v = RangeValueType{});
 
-*   Rename range_*inserter to range_*insert_extractor or
-    range_*inserting_extractor
-    ALTERNATIVE: make all returned types unspecified.
-
 *   A discard<T>(n) function that reads and parses up to n values of type T,
     but just discards them.
-
-*   A next() function for proxy objects, in addition to count(), that gives the
-    iterator to the next element in the range following what was just read.
-
-*   Collapse all input proxies returned from input functions into a single
-    parametrized type. The traits class would have to have an add() function
-    that takes a value_type by value and returns a tuple with at least 2
-    bools (one for whether adding the value to the range was successful, one
-    for whether more values are wanted... or should that be in a separate
-    function?).
-    ISSUE: How to deal with the buffer value? Another function that returns
-           a value or reference to value_type that gets called each iteration?
-    ALTERNATIVE: Rather than an add() function, a read() function that takes a
-                 basic_istream& and does the read internally - handling the
-                 buffer object itself.
